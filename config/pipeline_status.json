@@ -1,0 +1,4 @@
+{
+  "schema_version": "1.0.0",
+  "source_label": "Live CI/CD status settings (config/pipeline_status.json): the console reads Cloud Build and Cloud Deploy state for the serving revision."
+}

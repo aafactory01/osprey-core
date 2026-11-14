@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0.0",
+  "source_label": "Delivery pipeline configuration (config/cicd.json): Cloud Build CI runs at S5_RELEASE_GATE and Google Cloud Deploy CD runs at S6_DEPLOY_CLOSE.",
+  "project_id": "gement02",
+  "region": "us-central1",
+  "service": "osprey-core",
+  "runtime_service_account": "osprey-core-run@gement02.iam.gserviceaccount.com",
+  "stage_ids": {
+    "spec": "S1_SPEC",
+    "tests": "S2_TESTS",
+    "build": "S3_BUILD",
+    "verify": "S4_VERIFY_QA",
+    "release_gate": "S5_RELEASE_GATE",
+    "deploy_close": "S6_DEPLOY_CLOSE"
+  },
+  "ci": {
+    "provider": "Cloud Build",
+    "config_file": "cloudbuild.yaml",
+    "image_repository": "us-central1-docker.pkg.dev/gement02/osprey-scion/osprey-core"
+  },
+  "cd": {
+    "provider": "Google Cloud Deploy",
+    "config_file": "clouddeploy.yaml",
+    "skaffold_file": "skaffold.yaml",
+    "service_manifest": "run-service.yaml",
+    "delivery_pipeline": "osprey-core-cd",
+    "target": "osprey-core-prod",
+    "execution_service_account": "osprey-onboard-sa@gement02.iam.gserviceaccount.com",
+    "image_name": "osprey-core"
+  },
+  "provenance_env": {
+    "commit_sha": "OSPREY_COMMIT_SHA",
+    "short_sha": "OSPREY_SHORT_SHA",
+    "build_id": "OSPREY_CI_BUILD_ID",
+    "image_digest": "OSPREY_IMAGE_DIGEST",
+    "release": "OSPREY_CD_RELEASE",
+    "pipeline": "OSPREY_CD_PIPELINE",
+    "target": "OSPREY_CD_TARGET",
+    "revision": "K_REVISION",
+    "service": "K_SERVICE"
+  }
+}

@@ -35,6 +35,13 @@
         }}
       }}
     },
+    "pipeline_status": {
+      "path": "config/pipeline_status.json",
+      "spec": {"type": "dict", "required": {
+        "schema_version": {"type": "str", "min_length": 1},
+        "source_label": {"type": "str", "min_length": 1}
+      }}
+    },
     "health": {
       "path": "config/health.json",
       "spec": {"type": "dict", "required": {
@@ -192,6 +199,35 @@
         "error_taxonomy": {"type": "list", "min_items": 1, "items": {"type": "dict", "required": {
           "taxonomy": "str", "patterns": {"type": "list", "min_items": 1, "items": "str"}
         }}}
+      }}
+    },
+    "cicd": {
+      "path": "config/cicd.json",
+      "spec": {"type": "dict", "required": {
+        "schema_version": {"type": "str", "min_length": 1},
+        "source_label": {"type": "str", "min_length": 1},
+        "project_id": {"type": "str", "min_length": 1},
+        "region": {"type": "str", "min_length": 1},
+        "service": {"type": "str", "min_length": 1},
+        "runtime_service_account": {"type": "str", "min_length": 1},
+        "stage_ids": {"type": "dict", "required": {
+          "spec": "str", "tests": "str", "build": "str", "verify": "str", "release_gate": "str", "deploy_close": "str"
+        }},
+        "ci": {"type": "dict", "required": {
+          "provider": "str", "config_file": "str",
+          "image_repository": {"type": "str", "min_length": 1}
+        }},
+        "cd": {"type": "dict", "required": {
+          "provider": "str", "config_file": "str", "skaffold_file": "str", "service_manifest": "str",
+          "delivery_pipeline": {"type": "str", "min_length": 1},
+          "target": {"type": "str", "min_length": 1},
+          "execution_service_account": {"type": "str", "min_length": 1},
+          "image_name": {"type": "str", "min_length": 1}
+        }},
+        "provenance_env": {"type": "dict", "required": {
+          "commit_sha": "str", "short_sha": "str", "build_id": "str", "image_digest": "str",
+          "release": "str", "pipeline": "str", "target": "str", "revision": "str", "service": "str"
+        }}
       }}
     },
     "shadow_replay_evals": {

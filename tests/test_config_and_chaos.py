@@ -12,8 +12,8 @@ from app.app import create_app
 from app.config_store import ConfigError, ConfigStore
 from tests.helpers import edit_json, rewrite
 
-NAMES = ["agents", "app_settings", "audit_receipts", "dp001_guard_policy", "health", "night_dreaming", "rollback",
-         "rollouts", "shadow_replay_evals", "task_backends", "workflow_stages"]
+NAMES = ["agents", "app_settings", "audit_receipts", "cicd", "dp001_guard_policy", "health", "night_dreaming",
+         "pipeline_status", "rollback", "rollouts", "shadow_replay_evals", "task_backends", "workflow_stages"]
 
 
 def test_every_declared_config_validates():

@@ -1,0 +1,30 @@
+# Google Cloud Deploy pipeline for osprey-core (S6_DEPLOY_CLOSE).
+# Register or update: gcloud deploy apply --file=clouddeploy.yaml --region=us-central1 --project=gement02
+# Releases are created only by scripts/s6_deploy.py from an S5 release packet (immutable @sha256 image).
+apiVersion: deploy.cloud.google.com/v1
+kind: DeliveryPipeline
+metadata:
+  name: osprey-core-cd
+  labels:
+    app: osprey-core
+description: osprey-core CD - S6_DEPLOY_CLOSE rolls the S5 @sha256 release packet out to Cloud Run us-central1 behind IAP.
+serialPipeline:
+  stages:
+    - targetId: osprey-core-prod
+      profiles: []
+---
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: osprey-core-prod
+  labels:
+    app: osprey-core
+description: Production Cloud Run service osprey-core (gement02, us-central1, IAP, ingress all, min 1 / max 1).
+requireApproval: false
+run:
+  location: projects/gement02/locations/us-central1
+executionConfigs:
+  - usages:
+      - RENDER
+      - DEPLOY
+    serviceAccount: osprey-onboard-sa@gement02.iam.gserviceaccount.com
