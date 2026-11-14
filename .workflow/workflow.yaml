@@ -1,0 +1,9 @@
+name: hybrid
+version: "28cc6c0c"
+stages:
+  - S1_SPEC
+  - S2_CODE
+  - S3_TEST
+  - S4_REVIEW
+  - S5_RELEASE_GATE
+  - S6_DEPLOY_CLOSE
