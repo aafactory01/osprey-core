@@ -110,13 +110,25 @@ def test_unknown_version_override_fails_closed():
 def test_stage_comes_from_environment_when_event_has_none():
     deploy = event("gcloud run deploy osprey-core --source . --iap")
     assert run_hook(deploy, {"WORKFLOW_STAGE": "S6_DEPLOY_CLOSE"})[0] == 0
-    assert run_hook(deploy, {"WORKFLOW_STAGE": "S3_TEST"})[0] == 2
+    assert run_hook(deploy, {"WORKFLOW_STAGE": "S2_TESTS"})[0] == 2
     assert run_hook(deploy)[1]["rule_id"] == "R-DEPLOY-BEFORE-RELEASE-GATE"
 
 
 def test_event_stage_wins_over_environment():
-    deploy = event("gcloud run deploy osprey-core --source . --iap", stage="S2_CODE")
+    deploy = event("gcloud run deploy osprey-core --source . --iap", stage="S3_BUILD")
     assert run_hook(deploy, {"WORKFLOW_STAGE": "S6_DEPLOY_CLOSE"})[0] == 2
+
+
+def test_cicd_gates_read_the_stage_from_the_environment():
+    release = event("gcloud deploy releases create rel-1 --delivery-pipeline=osprey-core-cd --region=us-central1")
+    code, payload, stderr = run_hook(release, {"WORKFLOW_STAGE": "S5_RELEASE_GATE"})
+    assert code == 2 and payload["rule_id"] == "R-CD-BEFORE-DEPLOY-CLOSE"
+    assert "BLOCKED by R-CD-BEFORE-DEPLOY-CLOSE" in stderr and "before S6_DEPLOY_CLOSE" in stderr
+    assert run_hook(release, {"WORKFLOW_STAGE": "S6_DEPLOY_CLOSE"})[0] == 0
+    build = event("gcloud builds submit --config=cloudbuild.yaml")
+    assert run_hook(build, {"WORKFLOW_STAGE": "S4_VERIFY_QA"})[1]["rule_id"] == "R-CI-BEFORE-RELEASE-GATE"
+    assert run_hook(build, {"WORKFLOW_STAGE": "S5_RELEASE_GATE"})[0] == 0
+    assert run_hook(build)[1]["rule_id"] == "R-CI-BEFORE-RELEASE-GATE"
 
 
 def test_oversized_stdin_fails_closed(tmp_path):

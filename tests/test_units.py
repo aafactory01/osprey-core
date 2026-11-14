@@ -13,7 +13,7 @@ from app.workflow_service import load_task_backend_module
 from tests.helpers import TEST_HMAC_KEY
 
 tb = load_task_backend_module()
-STAGES = ["S1_SPEC", "S2_CODE", "S3_TEST", "S4_REVIEW", "S5_RELEASE_GATE", "S6_DEPLOY_CLOSE"]
+STAGES = ["S1_SPEC", "S2_TESTS", "S3_BUILD", "S4_VERIFY_QA", "S5_RELEASE_GATE", "S6_DEPLOY_CLOSE"]
 
 
 @pytest.fixture
@@ -62,8 +62,8 @@ def test_unsafe_or_broken_formats_are_rejected(backend_cfg, fmt):
 
 
 def test_missing_stage_mapping_is_rejected(backend_cfg):
-    del backend_cfg["backends"]["linear"]["stage_map"]["S4_REVIEW"]
-    with pytest.raises(tb.TaskBackendError, match="S4_REVIEW"):
+    del backend_cfg["backends"]["linear"]["stage_map"]["S4_VERIFY_QA"]
+    with pytest.raises(tb.TaskBackendError, match="S4_VERIFY_QA"):
         tb.TaskBackendRegistry(backend_cfg, STAGES)
 
 

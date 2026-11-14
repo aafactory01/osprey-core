@@ -50,7 +50,14 @@ def test_rule_diff_is_computed_from_policy(inputs):
     diff = run_shadow_replay(*inputs)["rule_diff"]
     assert diff["removed"] == [] and diff["modified"] == ["R-RM-RF"]
     assert set(diff["added"]) == {"R-RUN-DEPLOY-PUBLIC", "R-RUN-PUBLIC-IAM", "R-RUN-DEPLOY-NO-IAP",
-                                  "R-DEPLOY-BEFORE-RELEASE-GATE", "R-SHELL-PROTECTED-PATH-WRITE", "R-PROTECTED-DREAM-ARTIFACTS"}
+                                  "R-DEPLOY-BEFORE-RELEASE-GATE", "R-CI-BEFORE-RELEASE-GATE", "R-CD-BEFORE-DEPLOY-CLOSE",
+                                  "R-SHELL-PROTECTED-PATH-WRITE", "R-PROTECTED-DREAM-ARTIFACTS"}
+
+
+def test_eval_events_use_workflow_stage_ids(inputs):
+    policy, evals, _ = inputs
+    stages = [case["event"]["stage"] for case in evals["cases"]]
+    assert set(stages) <= set(policy["stage_order"]) and len(stages) == 10
 
 
 def test_swapped_versions_fail_the_gate(inputs):

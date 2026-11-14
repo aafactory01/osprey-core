@@ -18,7 +18,7 @@ def v11():
 
 
 def shell(command, cwd=CWD):
-    return {"tool_name": "Bash", "tool_input": {"command": command}, "stage": "S2_CODE", "cwd": cwd}
+    return {"tool_name": "Bash", "tool_input": {"command": command}, "stage": "S3_BUILD", "cwd": cwd}
 
 
 @pytest.mark.parametrize("cwd", [CWD, None], ids=["with-cwd", "no-cwd"])
@@ -104,8 +104,10 @@ def test_scoped_find_and_cleanup_stay_allowed(v11, command):
     assert evaluate(shell(command), v11).decision == "allow"
 
 
-# sha256 of config/dp001_guard_policy.json as committed in 1ba7d2a; the engine fix must not change it.
-POLICY_SHA256 = "209c04e341ad07599397b4aa9b2cdafc5fff4d0314c73c041c465aecfb22a93c"
+# sha256 of config/dp001_guard_policy.json after the Phase 2 change (stage ids S2_TESTS / S3_BUILD / S4_VERIFY_QA
+# plus the CI/CD stage gates in v1.1.0). Engine fixes must not change it; a deliberate policy edit updates this pin
+# in the same reviewed commit and regenerates dreamstore/ with scripts/nightly_dream_evolver.py --write.
+POLICY_SHA256 = "629f41e77fad638953f8ee5c1347d4f0a435fa9c81c975b32d069e655e785794"
 
 
 def test_policy_versions_are_byte_identical_to_the_pushed_baseline():

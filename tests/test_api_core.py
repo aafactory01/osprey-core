@@ -134,7 +134,7 @@ def test_rollouts_traffic_mismatch_fails_closed(temp_root, temp_client):
 def test_workflow_statuses_are_derived_from_current_stage(client):
     body = client.get("/api/workflow").get_json()
     stages = body["stages"]
-    assert [s["id"] for s in stages] == ["S1_SPEC", "S2_CODE", "S3_TEST", "S4_REVIEW", "S5_RELEASE_GATE", "S6_DEPLOY_CLOSE"]
+    assert [s["id"] for s in stages] == ["S1_SPEC", "S2_TESTS", "S3_BUILD", "S4_VERIFY_QA", "S5_RELEASE_GATE", "S6_DEPLOY_CLOSE"]
     assert [s["status"] for s in stages] == ["completed"] * 3 + ["active"] + ["pending"] * 2
     assert [s["mode"] for s in stages] == ["agentic"] * 4 + ["deterministic"] * 2
     assert [s["position"] for s in stages] == list(range(1, 7))
@@ -146,6 +146,18 @@ def test_workflow_follows_config_changes(temp_root, temp_client):
     edit_json(temp_root / "config" / "workflow_stages.json", lambda doc: doc.update(current_stage="S6_DEPLOY_CLOSE"))
     stages = temp_client.get("/api/workflow").get_json()["stages"]
     assert [s["status"] for s in stages] == ["completed"] * 5 + ["active"]
+
+
+def test_workflow_exposes_bounce_routes_and_pipelines(client):
+    stages = {s["id"]: s for s in client.get("/api/workflow").get_json()["stages"]}
+    gate, close = stages["S5_RELEASE_GATE"], stages["S6_DEPLOY_CLOSE"]
+    assert gate["bounce_to"] == ["S3_BUILD", "S4_VERIFY_QA"] and close["bounce_to"] == ["S3_BUILD"]
+    assert gate["pipeline"] == {"kind": "ci", "provider": "Cloud Build", "config_file": "cloudbuild.yaml",
+                                "command": "python3 scripts/s5_release_gate.py --commit <HEAD sha>"}
+    assert close["pipeline"]["kind"] == "cd" and close["pipeline"]["provider"] == "Google Cloud Deploy"
+    assert close["pipeline"]["config_file"] == "clouddeploy.yaml"
+    assert close["pipeline"]["command"].startswith("python3 scripts/s6_deploy.py --packet ")
+    assert all("pipeline" not in s and "bounce_to" not in s for s in stages.values() if s["mode"] == "agentic")
 
 
 def test_workflow_unknown_current_stage_is_503(temp_root, temp_client):

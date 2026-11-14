@@ -26,11 +26,11 @@ def v10(doc):
     return resolve_policy(doc, "1.0.0")
 
 
-def bash(command, stage="S2_CODE"):
+def bash(command, stage="S3_BUILD"):
     return {"tool_name": "Bash", "tool_input": {"command": command}, "stage": stage}
 
 
-def write(path, stage="S2_CODE", tool="Write", key="file_path"):
+def write(path, stage="S3_BUILD", tool="Write", key="file_path"):
     return {"tool_name": tool, "tool_input": {key: path, "content": "x"}, "stage": stage}
 
 
@@ -40,38 +40,38 @@ def test_policy_document_shape(doc):
 
 
 @pytest.mark.parametrize("command,stage,rule_id", [
-    ("git push --force origin main", "S2_CODE", "R-GIT-FORCE-PUSH-MAIN"),
-    ("git push origin main -f", "S2_CODE", "R-GIT-FORCE-PUSH-MAIN"),
-    ("git push origin +main", "S2_CODE", "R-GIT-FORCE-PUSH-MAIN"),
-    ("cd repo && git -C . push --force-with-lease origin main", "S3_TEST", "R-GIT-FORCE-PUSH-MAIN"),
-    ("git reset --hard origin/main", "S2_CODE", "R-GIT-RESET-HARD-ORIGIN"),
-    ("git reset --hard @{u}", "S2_CODE", "R-GIT-RESET-HARD-ORIGIN"),
-    ("rm -rf /", "S2_CODE", "R-RM-RF"),
-    ("rm -rf ~", "S2_CODE", "R-RM-RF"),
-    ("rm -fr .", "S2_CODE", "R-RM-RF"),
-    ('rm -rf "$REPO_ROOT"', "S2_CODE", "R-RM-RF"),
-    ("sudo rm -rf --no-preserve-root /", "S2_CODE", "R-RM-RF"),
+    ("git push --force origin main", "S3_BUILD", "R-GIT-FORCE-PUSH-MAIN"),
+    ("git push origin main -f", "S3_BUILD", "R-GIT-FORCE-PUSH-MAIN"),
+    ("git push origin +main", "S3_BUILD", "R-GIT-FORCE-PUSH-MAIN"),
+    ("cd repo && git -C . push --force-with-lease origin main", "S2_TESTS", "R-GIT-FORCE-PUSH-MAIN"),
+    ("git reset --hard origin/main", "S3_BUILD", "R-GIT-RESET-HARD-ORIGIN"),
+    ("git reset --hard @{u}", "S3_BUILD", "R-GIT-RESET-HARD-ORIGIN"),
+    ("rm -rf /", "S3_BUILD", "R-RM-RF"),
+    ("rm -rf ~", "S3_BUILD", "R-RM-RF"),
+    ("rm -fr .", "S3_BUILD", "R-RM-RF"),
+    ('rm -rf "$REPO_ROOT"', "S3_BUILD", "R-RM-RF"),
+    ("sudo rm -rf --no-preserve-root /", "S3_BUILD", "R-RM-RF"),
     ("gcloud run services delete osprey-core --region us-central1", "S6_DEPLOY_CLOSE", "R-RUN-SERVICE-DELETE"),
     ("gcloud run deploy osprey-core --source . --iap --allow-unauthenticated", "S6_DEPLOY_CLOSE", "R-RUN-DEPLOY-PUBLIC"),
     ("gcloud run services add-iam-policy-binding osprey-core --member=allUsers --role=roles/run.invoker", "S6_DEPLOY_CLOSE",
      "R-RUN-PUBLIC-IAM"),
     ("gcloud beta run deploy osprey-core --source .", "S6_DEPLOY_CLOSE", "R-RUN-DEPLOY-NO-IAP"),
-    ("gcloud run deploy osprey-core --source . --iap", "S2_CODE", "R-DEPLOY-BEFORE-RELEASE-GATE"),
-    ("gcloud run services update-traffic osprey-core --to-latest", "S4_REVIEW", "R-DEPLOY-BEFORE-RELEASE-GATE"),
-    ("python3 scripts/s6_rollback.py --execute", "S3_TEST", "R-DEPLOY-BEFORE-RELEASE-GATE"),
+    ("gcloud run deploy osprey-core --source . --iap", "S3_BUILD", "R-DEPLOY-BEFORE-RELEASE-GATE"),
+    ("gcloud run services update-traffic osprey-core --to-latest", "S4_VERIFY_QA", "R-DEPLOY-BEFORE-RELEASE-GATE"),
+    ("python3 scripts/s6_rollback.py --execute", "S2_TESTS", "R-DEPLOY-BEFORE-RELEASE-GATE"),
     ("kubectl delete namespace prod", "S6_DEPLOY_CLOSE", "R-KUBECTL-DELETE-NS"),
     ("kubectl --context x delete ns prod", "S6_DEPLOY_CLOSE", "R-KUBECTL-DELETE-NS"),
-    ("kubectl get secrets -A -o yaml", "S4_REVIEW", "R-KUBECTL-SECRETS"),
-    ("kubectl -n prod describe secret db-password", "S4_REVIEW", "R-KUBECTL-SECRETS"),
-    ("gcloud run services list --impersonate-service-account=sa@p.iam.gserviceaccount.com", "S4_REVIEW", "R-IMPERSONATE-SA"),
-    ("echo $AUDIT_HMAC_KEY", "S3_TEST", "R-SECRETS-ECHO"),
-    ("printf '%s' ${github_token}", "S3_TEST", "R-SECRETS-ECHO"),
-    ("printenv GITHUB_TOKEN", "S3_TEST", "R-SECRETS-ECHO"),
+    ("kubectl get secrets -A -o yaml", "S4_VERIFY_QA", "R-KUBECTL-SECRETS"),
+    ("kubectl -n prod describe secret db-password", "S4_VERIFY_QA", "R-KUBECTL-SECRETS"),
+    ("gcloud run services list --impersonate-service-account=sa@p.iam.gserviceaccount.com", "S4_VERIFY_QA", "R-IMPERSONATE-SA"),
+    ("echo $AUDIT_HMAC_KEY", "S2_TESTS", "R-SECRETS-ECHO"),
+    ("printf '%s' ${github_token}", "S2_TESTS", "R-SECRETS-ECHO"),
+    ("printenv GITHUB_TOKEN", "S2_TESTS", "R-SECRETS-ECHO"),
     ("gcloud secrets versions access latest --secret=audit-key", "S5_RELEASE_GATE", "R-SECRETS-ECHO"),
-    ("cat .env", "S2_CODE", "R-SECRETS-ECHO"),
-    ("echo stage=S9 > .workflow/workflow.yaml", "S2_CODE", "R-SHELL-PROTECTED-PATH-WRITE"),
-    ("sed -i s/60/100/ dreamstore/scorecard.json", "S3_TEST", "R-SHELL-PROTECTED-PATH-WRITE"),
-    ("cp /tmp/p.json config/dp001_guard_policy.json", "S4_REVIEW", "R-SHELL-PROTECTED-PATH-WRITE"),
+    ("cat .env", "S3_BUILD", "R-SECRETS-ECHO"),
+    ("echo stage=S9 > .workflow/workflow.yaml", "S3_BUILD", "R-SHELL-PROTECTED-PATH-WRITE"),
+    ("sed -i s/60/100/ dreamstore/scorecard.json", "S2_TESTS", "R-SHELL-PROTECTED-PATH-WRITE"),
+    ("cp /tmp/p.json config/dp001_guard_policy.json", "S4_VERIFY_QA", "R-SHELL-PROTECTED-PATH-WRITE"),
 ])
 def test_v11_blocks(v11, command, stage, rule_id):
     decision = evaluate(bash(command, stage), v11)
@@ -80,19 +80,19 @@ def test_v11_blocks(v11, command, stage, rule_id):
 
 
 @pytest.mark.parametrize("command,stage", [
-    ("ls -la", "S2_CODE"),
-    ("python -m pytest -q -p no:cacheprovider", "S3_TEST"),
-    ("rm -rf ./dist", "S2_CODE"),
-    ("rm -rf build/ node_modules/.cache", "S2_CODE"),
-    ("git push origin feature/console", "S2_CODE"),
-    ("git push --force origin feature/console", "S2_CODE"),
-    ("git reset --hard HEAD~1", "S2_CODE"),
+    ("ls -la", "S3_BUILD"),
+    ("python -m pytest -q -p no:cacheprovider", "S2_TESTS"),
+    ("rm -rf ./dist", "S3_BUILD"),
+    ("rm -rf build/ node_modules/.cache", "S3_BUILD"),
+    ("git push origin feature/console", "S3_BUILD"),
+    ("git push --force origin feature/console", "S3_BUILD"),
+    ("git reset --hard HEAD~1", "S3_BUILD"),
     ("gcloud run deploy osprey-core --source . --region us-central1 --iap --no-allow-unauthenticated", "S6_DEPLOY_CLOSE"),
     ("gcloud run deploy osprey-core --source . --iap", "S5_RELEASE_GATE"),
-    ("python3 scripts/s6_rollback.py", "S3_TEST"),
-    ("kubectl get pods -n prod", "S4_REVIEW"),
-    ("cat .workflow/workflow.yaml", "S2_CODE"),
-    ("echo $HOME && echo 'h\u00e9llo w\u00f6rld'", "S2_CODE"),
+    ("python3 scripts/s6_rollback.py", "S2_TESTS"),
+    ("kubectl get pods -n prod", "S4_VERIFY_QA"),
+    ("cat .workflow/workflow.yaml", "S3_BUILD"),
+    ("echo $HOME && echo 'h\u00e9llo w\u00f6rld'", "S3_BUILD"),
 ])
 def test_v11_allows(v11, command, stage):
     decision = evaluate(bash(command, stage), v11)
@@ -105,18 +105,18 @@ def test_nbsp_obfuscated_force_push_still_blocked(v11):
 
 @pytest.mark.parametrize("path,stage,blocked", [
     (".workflow/workflow.yaml", "S1_SPEC", False),
-    (".workflow/workflow.yaml", "S2_CODE", True),
-    ("/workspace/osprey-core/.workflow/task_backend.py", "S4_REVIEW", True),
-    ("WORKFLOW.yaml", "S3_TEST", True),
-    ("app/../.workflow/workflow.yaml", "S2_CODE", True),
-    (".WORKFLOW/Workflow.YAML", "S2_CODE", True),
-    (".workflow\\workflow.yaml", "S2_CODE", True),
+    (".workflow/workflow.yaml", "S3_BUILD", True),
+    ("/workspace/osprey-core/.workflow/task_backend.py", "S4_VERIFY_QA", True),
+    ("WORKFLOW.yaml", "S2_TESTS", True),
+    ("app/../.workflow/workflow.yaml", "S3_BUILD", True),
+    (".WORKFLOW/Workflow.YAML", "S3_BUILD", True),
+    (".workflow\\workflow.yaml", "S3_BUILD", True),
     ("dreamstore/scorecard.json", "S1_SPEC", True),
     ("dreamstore/proposals/DP-001.json", "S6_DEPLOY_CLOSE", True),
     ("/abs/osprey-core/config/dp001_guard_policy.json", "S1_SPEC", True),
-    ("dreamstore/hooks/dp001_pre_tool_guard.py", "S2_CODE", True),
-    ("app/app.py", "S2_CODE", False),
-    ("config/rollouts.json", "S2_CODE", False),
+    ("dreamstore/hooks/dp001_pre_tool_guard.py", "S3_BUILD", True),
+    ("app/app.py", "S3_BUILD", False),
+    ("config/rollouts.json", "S3_BUILD", False),
 ])
 def test_v11_file_write_gates(v11, path, stage, blocked):
     assert evaluate(write(path, stage), v11).blocked is blocked
@@ -125,12 +125,12 @@ def test_v11_file_write_gates(v11, path, stage, blocked):
 @pytest.mark.parametrize("tool,key", [("Edit", "file_path"), ("MultiEdit", "file_path"), ("write_file", "path"),
                                       ("replace", "absolute_path"), ("edit_file", "TargetFile"), ("NotebookEdit", "notebook_path")])
 def test_every_write_tool_shape_is_guarded(v11, tool, key):
-    assert evaluate(write("dreamstore/scorecard.json", "S3_TEST", tool, key), v11).rule_id == "R-PROTECTED-DREAM-ARTIFACTS"
+    assert evaluate(write("dreamstore/scorecard.json", "S2_TESTS", tool, key), v11).rule_id == "R-PROTECTED-DREAM-ARTIFACTS"
 
 
 @pytest.mark.parametrize("tool,key", [("run_shell_command", "command"), ("run_command", "CommandLine"), ("shell", "cmd")])
 def test_every_shell_tool_shape_is_guarded(v11, tool, key):
-    event = {"tool_name": tool, "tool_input": {key: "kubectl get secrets"}, "stage": "S2_CODE"}
+    event = {"tool_name": tool, "tool_input": {key: "kubectl get secrets"}, "stage": "S3_BUILD"}
     assert evaluate(event, v11).rule_id == "R-KUBECTL-SECRETS"
 
 
@@ -158,7 +158,7 @@ def test_malformed_events_fail_closed(v11, event, rule_id):
 
 
 def test_numbers_and_unicode_in_payload_do_not_confuse_guard(v11):
-    event = {"tool_name": "Bash", "tool_input": {"command": "echo ok \u2603", "n": -0.0, "big": 10 ** 400}, "stage": "S2_CODE"}
+    event = {"tool_name": "Bash", "tool_input": {"command": "echo ok \u2603", "n": -0.0, "big": 10 ** 400}, "stage": "S3_BUILD"}
     assert evaluate(event, v11).decision == "allow"
 
 
@@ -174,6 +174,74 @@ def test_baseline_differs_exactly_where_dp001_says(v10, v11):
     assert not evaluate(bash("rm -rf ./dist"), v11).blocked
     public = bash("gcloud run deploy osprey-core --allow-unauthenticated", "S6_DEPLOY_CLOSE")
     assert not evaluate(public, v10).blocked and evaluate(public, v11).blocked
+
+
+# CI/CD stage gates (v1.1.0): Cloud Build CI from S5_RELEASE_GATE on, Google Cloud Deploy only at S6_DEPLOY_CLOSE.
+# Each entry lists the stage_gate rules that can fire, in policy order, as (rule id, minimum stage).
+CI = (("R-CI-BEFORE-RELEASE-GATE", "S5_RELEASE_GATE"),)
+CD = (("R-CD-BEFORE-DEPLOY-CLOSE", "S6_DEPLOY_CLOSE"),)
+ROLLBACK = (("R-DEPLOY-BEFORE-RELEASE-GATE", "S5_RELEASE_GATE"), ("R-CD-BEFORE-DEPLOY-CLOSE", "S6_DEPLOY_CLOSE"))
+CICD_COMMANDS = [
+    ("gcloud builds submit --config=cloudbuild.yaml", CI),
+    ("gcloud --project=gement02 builds submit --config=cloudbuild.yaml --substitutions=SHORT_SHA=8a1e974", CI),
+    ("gcloud beta builds submit --config=cloudbuild.yaml", CI),
+    ("python3 scripts/s5_release_gate.py --commit 8a1e974", CI),
+    ("python3 scripts/workflow_ctl.py release --commit 8a1e974", CI),
+    ("gcloud deploy releases create rel-8a1e974 --delivery-pipeline=osprey-core-cd --region=us-central1", CD),
+    ("gcloud deploy apply --file=clouddeploy.yaml --region=us-central1 --project=gement02", CD),
+    ("gcloud deploy targets rollback osprey-core-prod --delivery-pipeline=osprey-core-cd --region=us-central1", CD),
+    ("gcloud\u00a0deploy\u00a0apply --file=clouddeploy.yaml", CD),
+    ("python3 scripts/s6_deploy.py --packet .workflow/evidence/s5_release_packet.json", CD),
+    ("python3 scripts/s6_rollback.py --project gement02 --execute", ROLLBACK),
+]
+
+
+def _expected_gate(gates, stage, order):
+    return next(((rule_id, floor) for rule_id, floor in gates if order.index(stage) < order.index(floor)), None)
+
+
+@pytest.mark.parametrize("command,gates", CICD_COMMANDS)
+def test_cicd_commands_are_stage_gated(doc, v11, command, gates):
+    order = doc["stage_order"]
+    for stage in order:
+        decision, expected = evaluate(bash(command, stage), v11), _expected_gate(gates, stage, order)
+        if expected is None:
+            assert decision.decision == "allow", (command, stage, decision)
+        else:
+            assert decision.blocked and decision.rule_id == expected[0], (command, stage, decision)
+            assert f"current stage {stage} is before {expected[1]}" in decision.reason
+
+
+@pytest.mark.parametrize("command,gates", CICD_COMMANDS)
+@pytest.mark.parametrize("stage", [None, "", "NIGHTLY", "s6_deploy_close"])
+def test_cicd_gates_fail_closed_without_a_known_stage(v11, command, gates, stage):
+    decision = evaluate(bash(command, stage), v11)
+    assert decision.blocked and decision.rule_id == gates[0][0]
+
+
+@pytest.mark.parametrize("command", [
+    "cat scripts/s6_deploy.py scripts/s5_release_gate.py", "python3 -m py_compile scripts/s5_release_gate.py scripts/s6_deploy.py",
+    "python3 scripts/s6_rollback.py --project gement02", "python3 scripts/workflow_ctl.py status",
+    "python3 scripts/s6_exit.py --packet .workflow/evidence/s5_release_packet.json --report .workflow/evidence/s6_deploy_report.json",
+    "gcloud builds list --region=us-central1", "gcloud builds describe 1234 --region=us-central1",
+    "gcloud deploy releases list --delivery-pipeline=osprey-core-cd --region=us-central1",
+    "gcloud deploy rollouts list --release=rel-1 --delivery-pipeline=osprey-core-cd --region=us-central1",
+])
+def test_cicd_reads_and_dry_runs_stay_allowed_before_s5(v11, command):
+    decision = evaluate(bash(command, "S4_VERIFY_QA"), v11)
+    assert decision.decision == "allow" and decision.rule_id == "ALLOW_NO_RULE_MATCHED"
+
+
+def test_compound_cicd_command_needs_the_latest_stage(v11):
+    both = "gcloud builds submit --config=cloudbuild.yaml && gcloud deploy releases create rel-1 --delivery-pipeline=osprey-core-cd"
+    assert evaluate(bash(both, "S5_RELEASE_GATE"), v11).rule_id == "R-CD-BEFORE-DEPLOY-CLOSE"
+    assert evaluate(bash(both, "S6_DEPLOY_CLOSE"), v11).decision == "allow"
+
+
+@pytest.mark.parametrize("command,gates", [entry for entry in CICD_COMMANDS if entry[1] != ROLLBACK])
+def test_baseline_has_no_cicd_gates(v10, v11, command, gates):
+    assert evaluate(bash(command, "S2_TESTS"), v10).decision == "allow"
+    assert evaluate(bash(command, "S2_TESTS"), v11).rule_id == gates[0][0]
 
 
 @pytest.mark.parametrize("breakage", ["no_rules", "bad_regex_runtime", "not_mapping", "bad_kind"])

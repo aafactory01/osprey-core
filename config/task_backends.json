@@ -12,9 +12,9 @@
       "capabilities": ["dag_dependencies", "artifact_links", "agent_leases", "nightly_schedules"],
       "stage_map": {
         "S1_SPEC": {"status": "PLANNED", "label": "stage:s1-spec"},
-        "S2_CODE": {"status": "IN_PROGRESS", "label": "stage:s2-code"},
-        "S3_TEST": {"status": "IN_PROGRESS", "label": "stage:s3-test"},
-        "S4_REVIEW": {"status": "IN_REVIEW", "label": "stage:s4-review"},
+        "S2_TESTS": {"status": "IN_PROGRESS", "label": "stage:s2-tests"},
+        "S3_BUILD": {"status": "IN_PROGRESS", "label": "stage:s3-build"},
+        "S4_VERIFY_QA": {"status": "IN_REVIEW", "label": "stage:s4-verify-qa"},
         "S5_RELEASE_GATE": {"status": "AWAITING_GATE", "label": "stage:s5-release-gate"},
         "S6_DEPLOY_CLOSE": {"status": "COMPLETED", "label": "stage:s6-deploy-close"}
       }
@@ -29,9 +29,9 @@
       "capabilities": ["labels", "assignees", "pull_request_links", "webhooks"],
       "stage_map": {
         "S1_SPEC": {"status": "open", "label": "stage/spec"},
-        "S2_CODE": {"status": "open", "label": "stage/code"},
-        "S3_TEST": {"status": "open", "label": "stage/test"},
-        "S4_REVIEW": {"status": "open", "label": "stage/review"},
+        "S2_TESTS": {"status": "open", "label": "stage/tests"},
+        "S3_BUILD": {"status": "open", "label": "stage/build"},
+        "S4_VERIFY_QA": {"status": "open", "label": "stage/verify-qa"},
         "S5_RELEASE_GATE": {"status": "open", "label": "stage/release-gate"},
         "S6_DEPLOY_CLOSE": {"status": "closed", "label": "stage/deployed"}
       }
@@ -46,9 +46,9 @@
       "capabilities": ["workflow_transitions", "components", "fix_versions", "sla_fields"],
       "stage_map": {
         "S1_SPEC": {"status": "To Do", "label": "spec"},
-        "S2_CODE": {"status": "In Progress", "label": "code"},
-        "S3_TEST": {"status": "In QA", "label": "test"},
-        "S4_REVIEW": {"status": "In Review", "label": "review"},
+        "S2_TESTS": {"status": "In Progress", "label": "tests"},
+        "S3_BUILD": {"status": "In Progress", "label": "build"},
+        "S4_VERIFY_QA": {"status": "In QA", "label": "verify-qa"},
         "S5_RELEASE_GATE": {"status": "Ready for Release", "label": "release-gate"},
         "S6_DEPLOY_CLOSE": {"status": "Done", "label": "deployed"}
       }
@@ -63,9 +63,9 @@
       "capabilities": ["scoped_labels", "milestones", "merge_request_links", "iterations"],
       "stage_map": {
         "S1_SPEC": {"status": "opened", "label": "workflow::spec"},
-        "S2_CODE": {"status": "opened", "label": "workflow::code"},
-        "S3_TEST": {"status": "opened", "label": "workflow::test"},
-        "S4_REVIEW": {"status": "opened", "label": "workflow::review"},
+        "S2_TESTS": {"status": "opened", "label": "workflow::tests"},
+        "S3_BUILD": {"status": "opened", "label": "workflow::build"},
+        "S4_VERIFY_QA": {"status": "opened", "label": "workflow::verify-qa"},
         "S5_RELEASE_GATE": {"status": "opened", "label": "workflow::release-gate"},
         "S6_DEPLOY_CLOSE": {"status": "closed", "label": "workflow::deployed"}
       }
@@ -80,9 +80,9 @@
       "capabilities": ["git_native", "dependency_graph", "ready_queue", "offline_first"],
       "stage_map": {
         "S1_SPEC": {"status": "open", "label": "spec"},
-        "S2_CODE": {"status": "in_progress", "label": "code"},
-        "S3_TEST": {"status": "in_progress", "label": "test"},
-        "S4_REVIEW": {"status": "blocked", "label": "review"},
+        "S2_TESTS": {"status": "in_progress", "label": "tests"},
+        "S3_BUILD": {"status": "in_progress", "label": "build"},
+        "S4_VERIFY_QA": {"status": "blocked", "label": "verify-qa"},
         "S5_RELEASE_GATE": {"status": "blocked", "label": "release-gate"},
         "S6_DEPLOY_CLOSE": {"status": "closed", "label": "deployed"}
       }
@@ -97,9 +97,9 @@
       "capabilities": ["cycles", "triage", "sub_issues", "git_branch_names"],
       "stage_map": {
         "S1_SPEC": {"status": "Backlog", "label": "Spec"},
-        "S2_CODE": {"status": "In Progress", "label": "Code"},
-        "S3_TEST": {"status": "In Progress", "label": "Test"},
-        "S4_REVIEW": {"status": "In Review", "label": "Review"},
+        "S2_TESTS": {"status": "In Progress", "label": "Tests"},
+        "S3_BUILD": {"status": "In Progress", "label": "Build"},
+        "S4_VERIFY_QA": {"status": "In Review", "label": "Verify and QA"},
         "S5_RELEASE_GATE": {"status": "Todo", "label": "Release gate"},
         "S6_DEPLOY_CLOSE": {"status": "Done", "label": "Deployed"}
       }

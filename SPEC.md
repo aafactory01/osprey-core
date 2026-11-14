@@ -14,7 +14,7 @@ the API and shown in the UI.
 ## Acceptance criteria
 
 ### AC-01 Workflow stage timeline
-GET /api/workflow returns S1_SPEC, S2_CODE, S3_TEST, S4_REVIEW (agentic) and S5_RELEASE_GATE,
+GET /api/workflow returns S1_SPEC, S2_TESTS, S3_BUILD, S4_VERIFY_QA (agentic) and S5_RELEASE_GATE,
 S6_DEPLOY_CLOSE (deterministic) in order, with owners, entry and exit gates, evidence, and a status
 derived from `current_stage`. The Workflow tab shows the timeline with a Hybrid badge; agentic and
 deterministic stages look different.
@@ -22,6 +22,7 @@ deterministic stages look different.
 - tests/test_api_core.py::test_workflow_follows_config_changes
 - tests/test_api_core.py::test_workflow_unknown_current_stage_is_503
 - tests/test_repo_hygiene.py::test_workflow_yaml_matches_config
+- tests/test_workflow_wiring.py::test_yaml_and_console_describe_the_same_stages
 
 ### AC-02 Stage drawers
 Selecting a stage opens a modal drawer (dialog with aria-modal) listing owners from the 25-agent
@@ -48,8 +49,9 @@ dreamstore/hooks/dp001_pre_tool_guard.py reads one tool-call event on stdin, pri
 decision, and exits 0 (allow) or 2 (block, reason on stderr). It fails closed on empty, malformed,
 oversized, or slow input and on an unreadable policy. The versioned policy blocks force-push to
 main, hard resets to the remote, recursive deletes of protected locations (normalized flag and
-target forms), service deletion, public or non-IAP deploys, deploys before S5, namespace deletion,
-secret reads and echoes, impersonation, and writes to protected paths.
+target forms), service deletion, public or non-IAP deploys, deploys before S5, CI/CD commands before
+their stage (AC-16), namespace deletion, secret reads and echoes, impersonation, and writes to
+protected paths.
 - tests/test_guard.py::test_v11_blocks
 - tests/test_guard.py::test_v11_allows
 - tests/test_guard.py::test_v11_file_write_gates
@@ -120,9 +122,10 @@ bindings.
 - tests/test_guard_cli.py::test_version_override_selects_baseline
 
 ### AC-10 S6 rollback
-scripts/s6_rollback.py finds the previous ready Cloud Run revision from gcloud JSON, runs as a
-dry-run by default, shifts traffic only with --execute, and exits 1 without touching traffic on
-401, 403, 429, 503, timeouts, or an ambiguous history.
+scripts/s6_rollback.py runs as a dry-run by default. With --execute it rolls the Cloud Deploy target
+back (`gcloud deploy targets rollback`) with a fallback that shifts traffic to the previous ready Cloud
+Run revision, and it exits 1 without touching traffic on 401, 403, 429, 503, timeouts, or an ambiguous
+history.
 - tests/test_rollback.py::test_dry_run_plans_without_touching_traffic
 - tests/test_rollback.py::test_execute_shifts_traffic_with_planned_command
 - tests/test_rollback.py::test_gcloud_http_failures_fail_closed
@@ -161,13 +164,14 @@ The sample release scenario (workflow progress and receipts), the illustrative r
 projected task keys, and the curated DP-001 scenario traces carry a `source_label` that the API
 returns and the UI shows. The sample flag is part of each signed receipt. DP-001 provenance
 describes curated traces, never captured sessions, and every repo path named in configs and docs
-exists.
+exists. Runtime evidence under `.workflow/evidence/` is git-ignored and never committed.
 - tests/test_honesty.py::test_illustrative_configs_declare_their_provenance
 - tests/test_honesty.py::test_apis_return_source_labels
 - tests/test_honesty.py::test_scenario_flag_is_signed
 - tests/test_honesty.py::test_ui_renders_every_label
 - tests/test_honesty.py::test_no_recorded_provenance_claims
 - tests/test_honesty.py::test_path_references_resolve
+- tests/test_honesty.py::test_runtime_evidence_paths_are_git_ignored
 
 ### AC-14 Health paths that work on Cloud Run
 GET /health (liveness) and GET /ready (readiness) avoid the paths ending in z that Cloud Run's
@@ -185,8 +189,58 @@ for banned customer terms returns nothing, and requirements are pinned.
 - tests/test_repo_hygiene.py::test_scrub_banned_terms_case_insensitive_substring
 - tests/test_repo_hygiene.py::test_requirements_are_pinned_and_split
 
+### AC-16 CI/CD stage gates in the DP-001 guard
+The active policy blocks Cloud Build CI (`gcloud builds submit`, `scripts/s5_release_gate.py --commit`,
+`scripts/workflow_ctl.py release`) before S5_RELEASE_GATE. It blocks Google Cloud Deploy
+(`gcloud deploy releases create`, `gcloud deploy apply`, `gcloud deploy targets rollback`,
+`scripts/s6_deploy.py --packet`, `scripts/s6_rollback.py --execute`) before S6_DEPLOY_CLOSE. An unknown
+or missing stage blocks them all. Read-only CI/CD commands stay allowed. The baseline v1.0.0 has no CI/CD
+gates, and the DP-001 replay still scores 6/10 to 10/10.
+- tests/test_guard.py::test_cicd_commands_are_stage_gated
+- tests/test_guard.py::test_cicd_gates_fail_closed_without_a_known_stage
+- tests/test_guard.py::test_cicd_reads_and_dry_runs_stay_allowed_before_s5
+- tests/test_guard.py::test_compound_cicd_command_needs_the_latest_stage
+- tests/test_guard.py::test_baseline_has_no_cicd_gates
+- tests/test_guard_cli.py::test_cicd_gates_read_the_stage_from_the_environment
+- tests/test_dreaming.py::test_rule_diff_is_computed_from_policy
+
+### AC-17 Hybrid workflow wiring and control loops
+`.workflow/workflow.yaml` declares S1 to S4 as agentic stages graded by deterministic exit gates and S5,
+S6 as deterministic stages. S5 runs `python3 scripts/s5_release_gate.py --commit <HEAD sha>` (Cloud Build
+CI and the immutable @sha256 release packet) and bounces a failed step to S3_BUILD (unit-tests,
+docker-build, docker-push) or S4_VERIFY_QA (guard-substitutions, container-smoke, release-packet). S6
+runs `scripts/s6_deploy.py` (Google Cloud Deploy), probes IAP with `scripts/s6_exit.py`, rolls back with
+`scripts/s6_rollback.py --execute`, re-probes, and bounces to S3_BUILD. Stage ids match
+`config/cicd.json`, `config/workflow_stages.json`, and the DP-001 stage order. Every owner is on the
+roster, no QA agent is a builder, and failure modes 1 to 5 follow the workflow kit.
+- tests/test_workflow_wiring.py::test_contract_stage_ids_follow_the_workflow_order
+- tests/test_workflow_wiring.py::test_guard_stage_order_follows_the_workflow
+- tests/test_workflow_wiring.py::test_agentic_stages_are_graded_and_deterministic_stages_run_scripts
+- tests/test_workflow_wiring.py::test_agentic_exit_gates_point_at_real_checks
+- tests/test_workflow_wiring.py::test_s5_bounces_each_cloud_build_step_to_the_stage_that_owns_the_fix
+- tests/test_workflow_wiring.py::test_s6_probes_rolls_back_then_bounces_to_build
+- tests/test_workflow_wiring.py::test_every_owner_is_on_the_roster_and_qa_is_independent
+- tests/test_workflow_wiring.py::test_failure_modes_follow_the_kit
+- tests/test_workflow_wiring.py::test_workflow_commands_pass_the_guard_only_from_their_stage
+
+### AC-18 CI/CD definitions and status at S5 and S6
+GET /api/workflow gives S5 and S6 a `pipeline` block (Cloud Build with `cloudbuild.yaml`; Google Cloud
+Deploy with `clouddeploy.yaml`) and `bounce_to` routes. `clouddeploy.yaml` defines the delivery pipeline
+osprey-core-cd with the target osprey-core-prod on Cloud Run us-central1 and the execution service
+account osprey-onboard-sa. The Cloud Build step ids match the S5 bounce routes. The console shows live
+Cloud Build and Cloud Deploy status from GET /api/pipeline on the S5 and S6 stages. `WORKFLOW.md` and
+`README.md` state every deterministic command.
+- tests/test_api_core.py::test_workflow_exposes_bounce_routes_and_pipelines
+- tests/test_workflow_wiring.py::test_ci_and_cd_blocks_match_the_contract
+- tests/test_workflow_wiring.py::test_cloud_deploy_file_matches_the_contract
+- tests/test_workflow_wiring.py::test_cloud_build_steps_match_the_bounce_routes
+- tests/test_workflow_wiring.py::test_contract_route_table_agrees_when_declared
+- tests/test_workflow_wiring.py::test_workflow_doc_states_every_deterministic_command
+- tests/test_workflow_wiring.py::test_readme_documents_ci_cd
+
 ## Out of scope
 
 - Live workflow tracking: stage progress and receipts are a labelled sample scenario.
 - Creating tickets in the selected task backend: the mapping is a projection.
 - Live Cloud Run traffic in the rollout ledger: the ledger is sample data; the header shows the live revision.
+- Starting CI/CD from the console: the console only reads pipeline status; releases run from the S5 and S6 scripts.

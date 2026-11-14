@@ -1,13 +1,13 @@
 {
   "workflow_id": "hybrid",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "mode_label": "Hybrid",
   "scenario": "sample",
-  "source_label": "Sample release scenario (config/workflow_stages.json): illustrative stage progress, not live workflow state.",
-  "current_stage": "S4_REVIEW",
+  "source_label": "Sample release scenario (config/workflow_stages.json): illustrative stage progress, not live workflow state. Live Cloud Build and Cloud Deploy status for S5 and S6 comes from GET /api/pipeline.",
+  "current_stage": "S4_VERIFY_QA",
   "mode_descriptions": {
-    "agentic": "Agents plan and execute; gates check evidence before the stage can close.",
-    "deterministic": "Scripts run fixed commands; no agent may improvise or skip a step."
+    "agentic": "Agents plan and execute; deterministic exit gates check the evidence before the stage can close.",
+    "deterministic": "Scripts run fixed commands with no agent judgment; a failed check bounces the release to the stage that owns the fix."
   },
   "stages": [
     {
@@ -15,60 +15,64 @@
       "title": "Spec",
       "mode": "agentic",
       "owners": ["core-coordinator", "core-planner", "core-spec-writer"],
-      "summary": "Turn the request into a testable spec linked to an outcome and goal.",
+      "summary": "Turn the request into SPEC.md with numbered, testable acceptance criteria linked to an outcome and goal.",
       "entry_gates": ["Request is linked to an Outcome and Goal in the task backend", "No open S1 task exists for the same goal"],
-      "exit_gates": ["SPEC.md lists acceptance criteria and a test plan", "core-coordinator approval is captured as a signed receipt"],
+      "exit_gates": ["SPEC.md lists numbered acceptance criteria (AC-01 to AC-NN) and a test plan", "core-coordinator approval is captured as a signed receipt (human gate)"],
       "evidence": ["SPEC.md", "Receipt RCPT-0001 (sample scenario)"]
     },
     {
-      "id": "S2_CODE",
-      "title": "Code",
-      "mode": "agentic",
-      "owners": ["core-backend-subcoord", "core-frontend-subcoord", "core-api-builder", "core-ui-builder", "core-db-builder"],
-      "summary": "Builders implement the spec in disjoint file leases.",
-      "entry_gates": ["S1 exit receipt verifies PASS", "Each builder holds a disjoint file lease"],
-      "exit_gates": ["No source file exceeds 400 lines", "AST zero-hardcoding gate is green", "All builders report done with commit SHAs"],
-      "evidence": ["Commit SHAs per lease", "Lease ledger"]
-    },
-    {
-      "id": "S3_TEST",
-      "title": "Test",
+      "id": "S2_TESTS",
+      "title": "Tests",
       "mode": "agentic",
       "owners": ["core-qa-release-subcoord", "core-tester"],
-      "summary": "Prove the change with happy-path, edge-case, and chaos tests plus a browser sweep.",
-      "entry_gates": ["S2 exit receipt verifies PASS"],
-      "exit_gates": ["pytest passes 100% (happy, edge, chaos)", "Playwright sweep shows 0 console errors and 0 anomaly strings"],
-      "evidence": ["pytest summary line", "qa/e2e_console.py receipt JSON and screenshots"]
+      "summary": "Write the test suite before the build: happy-path, edge-case, and chaos tests mapped to each acceptance criterion.",
+      "entry_gates": ["S1 exit receipt verifies PASS (spec approved by a human)"],
+      "exit_gates": ["Every acceptance criterion in SPEC.md names tests that exist (checked by tests/test_honesty.py)", "Tests cover happy paths, edge cases, and chaos (fail-closed) behavior"],
+      "evidence": ["Test modules under tests/ with their commit SHA", "Receipt RCPT-0002 (sample scenario)"]
     },
     {
-      "id": "S4_REVIEW",
-      "title": "Review",
+      "id": "S3_BUILD",
+      "title": "Build",
       "mode": "agentic",
-      "owners": ["core-reviewer-gemini", "core-reviewer-opus", "core-reviewer-fable"],
-      "summary": "Three-model council reviews the diff; reviewers never review their own code.",
-      "entry_gates": ["S3 evidence is attached to the task"],
-      "exit_gates": ["3 of 3 council approvals with reviewer different from builder", "No open blocking findings"],
-      "evidence": ["Council review notes", "Receipt for the council decision"]
+      "owners": ["core-backend-subcoord", "core-frontend-subcoord", "core-api-builder", "core-ui-builder", "core-db-builder"],
+      "summary": "Builders implement the spec in disjoint file leases until every test passes.",
+      "entry_gates": ["S2 exit receipt verifies PASS", "Each builder holds a disjoint file lease"],
+      "exit_gates": ["pytest passes 100% (happy, edge, chaos)", "No source file exceeds 400 lines", "AST zero-hardcoding gate is green", "Builders report done with commit SHAs"],
+      "evidence": ["pytest summary line", "Commit SHAs per lease", "Lease ledger"]
+    },
+    {
+      "id": "S4_VERIFY_QA",
+      "title": "Verify and QA",
+      "mode": "agentic",
+      "owners": ["core-reviewer-gemini", "core-reviewer-opus", "core-reviewer-fable", "core-iap-security"],
+      "summary": "Independent verification: a three-model QA council, a dual-viewport browser sweep, and a security audit. No reviewer verifies their own code.",
+      "entry_gates": ["S3 exit receipt verifies PASS at the same commit", "No QA agent is a builder of the change"],
+      "exit_gates": ["3 of 3 council approvals (gemini, opus, fable) with no open blocking findings", "Playwright sweep at 1440x900 and 390x844: 0 console errors, 0 anomaly strings, no horizontal overflow", "Security audit by core-iap-security: IAP only, no committed secrets, DP-001 guard active"],
+      "evidence": ["Council review notes and decision receipt", "qa/e2e_console.py receipt JSON and screenshots", "Security audit notes"]
     },
     {
       "id": "S5_RELEASE_GATE",
       "title": "Release gate",
       "mode": "deterministic",
       "owners": ["core-coordinator", "core-iap-security"],
-      "summary": "Fixed checks decide whether the release may ship.",
-      "entry_gates": ["S4 council decision is 3 of 3 approve"],
-      "exit_gates": ["DP-001 guard policy is active and its shadow replay gate is PASS", "Audit receipt chain verifies PASS", "Human release approval is captured as a signed receipt"],
-      "evidence": ["Release gate receipt", "dreamstore/scorecard.json (computed by scripts/nightly_dream_evolver.py)"]
+      "summary": "A fixed script runs Cloud Build CI on the release commit and writes the immutable @sha256 release packet.",
+      "entry_gates": ["S4 council decision is 3 of 3 PASS at the release commit", "Tracked files are clean at the release commit"],
+      "exit_gates": ["Cloud Build is SUCCESS: guard-substitutions, unit-tests, docker-build, container-smoke, docker-push, release-packet", "Release packet pins the commit and the image @sha256 digest", "DP-001 guard policy is active and its shadow replay gate is PASS", "Audit receipt chain verifies PASS (POST /api/receipts/verify)", "Human release approval is captured as a signed receipt"],
+      "evidence": [".workflow/evidence/s5_release_packet.json", "Cloud Build build id and step results", "dreamstore/scorecard.json (computed by scripts/nightly_dream_evolver.py)"],
+      "bounce_to": ["S3_BUILD", "S4_VERIFY_QA"],
+      "pipeline": {"kind": "ci", "provider": "Cloud Build", "config_file": "cloudbuild.yaml", "command": "python3 scripts/s5_release_gate.py --commit <HEAD sha>"}
     },
     {
       "id": "S6_DEPLOY_CLOSE",
       "title": "Deploy and close",
       "mode": "deterministic",
       "owners": ["core-deployer"],
-      "summary": "Ship behind IAP, smoke-test, and close the task with evidence.",
-      "entry_gates": ["S5 receipt verifies PASS", "WORKFLOW_STAGE=S6_DEPLOY_CLOSE is set for the guard"],
-      "exit_gates": ["New revision serves 100% of traffic behind IAP", "Unauthenticated GET returns 302 or 401", "scripts/s6_rollback.py dry-run finds a previous revision"],
-      "evidence": ["Serving revision name (K_REVISION)", "qa/smoke_endpoints.py result JSON", "scripts/s6_rollback.py dry-run JSON"]
+      "summary": "A fixed script creates a Google Cloud Deploy release from the packet, probes IAP, and rolls back on failure.",
+      "entry_gates": ["S5 release packet pins the commit and the image @sha256 digest", "Human release approval receipt verifies PASS", "WORKFLOW_STAGE=S6_DEPLOY_CLOSE is set for the guard"],
+      "exit_gates": ["Cloud Deploy rollout to osprey-core-prod SUCCEEDED and the new revision serves 100% of traffic", "Unauthenticated GET returns 302 or 401; IAP-authenticated GET returns 200", "GET /api/pipeline provenance matches the packet and the deploy report", "IAP, ingress all, min and max 1 instance, the runtime service account, and the osprey-onboard-sa bindings are preserved"],
+      "evidence": [".workflow/evidence/s6_deploy_report.json", "Serving revision name (K_REVISION)", "scripts/s6_exit.py probe result"],
+      "bounce_to": ["S3_BUILD"],
+      "pipeline": {"kind": "cd", "provider": "Google Cloud Deploy", "config_file": "clouddeploy.yaml", "command": "python3 scripts/s6_deploy.py --packet .workflow/evidence/s5_release_packet.json"}
     }
   ]
 }

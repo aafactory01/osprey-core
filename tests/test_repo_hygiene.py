@@ -52,7 +52,7 @@ def test_scrub_banned_terms_case_insensitive_substring():
     assert hits == []
 
 
-@pytest.mark.skipif(not GIT, reason="git not installed")
+@pytest.mark.skipif(not GIT or not (REPO_ROOT / ".git").exists(), reason="git or repository metadata not available (e.g. Cloud Build source upload)")
 def test_git_grep_scrub_is_empty():
     proc = subprocess.run([GIT, "grep", "--untracked", "-n", "-I", "-i", "-E", BANNED], cwd=REPO_ROOT,
                           capture_output=True, text=True, check=False)
@@ -146,8 +146,10 @@ def test_workflow_yaml_matches_config():
     yml = yaml.safe_load((REPO_ROOT / ".workflow" / "workflow.yaml").read_text())
     cfg = json.loads((REPO_ROOT / "config" / "workflow_stages.json").read_text())
     assert [s["id"] for s in yml["stages"]] == [s["id"] for s in cfg["stages"]]
-    assert [s["mode"] for s in yml["stages"]] == [s["mode"] for s in cfg["stages"]]
+    assert [s["title"] for s in yml["stages"]] == [s["title"] for s in cfg["stages"]]
+    assert [s["execution"] for s in yml["stages"]] == [s["mode"] for s in cfg["stages"]]
     assert [s["owners"] for s in yml["stages"]] == [s["owners"] for s in cfg["stages"]]
+    assert yml["version"] == cfg["version"]
 
 
 def test_policy_stage_order_matches_workflow():
@@ -161,7 +163,7 @@ def test_docs_cover_roster_and_stages():
     roster = (REPO_ROOT / "AGENTS.md").read_text()
     assert len(agents) == 25 and all(f"`{agent['id']}`" in roster for agent in agents)
     workflow = (REPO_ROOT / "WORKFLOW.md").read_text()
-    assert all(stage in workflow for stage in ("S1_SPEC", "S2_CODE", "S3_TEST", "S4_REVIEW", "S5_RELEASE_GATE", "S6_DEPLOY_CLOSE"))
+    assert all(stage in workflow for stage in ("S1_SPEC", "S2_TESTS", "S3_BUILD", "S4_VERIFY_QA", "S5_RELEASE_GATE", "S6_DEPLOY_CLOSE"))
     lessons = (REPO_ROOT / "team-memory" / "LESSONS_LEARNED.md").read_text()
     assert len([line for line in lessons.splitlines() if line.startswith("- ")]) >= 8
 

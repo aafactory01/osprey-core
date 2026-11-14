@@ -17,16 +17,17 @@
     ],
     "verdict": "PASS"
   },
-  "generated_at": "2026-11-14T20:08:27Z",
+  "generated_at": "2026-11-14T22:22:48Z",
   "hook": "dreamstore/hooks/dp001_pre_tool_guard.py",
   "human_gate": "Promote by setting active_version in config/dp001_guard_policy.json through a reviewed commit.",
   "id": "DP-001",
   "policy_file": "config/dp001_guard_policy.json",
   "rationale": [
     "SR-03: v1.0.0 allows a public deploy (--allow-unauthenticated) during S6.",
-    "SR-09: v1.0.0 allows a Cloud Run deploy during S3, before the release gate.",
+    "SR-09: v1.0.0 allows a Cloud Run deploy during S2, before the release gate.",
     "SR-08: v1.0.0 lets an agent hand-write dreamstore/scorecard.json instead of running the replay.",
-    "SR-05: v1.0.0 blocks routine build cleanup (rm -rf ./dist), which pushes agents to work around the guard."
+    "SR-05: v1.0.0 blocks routine build cleanup (rm -rf ./dist), which pushes agents to work around the guard.",
+    "CI/CD stage gates: v1.0.0 lets gcloud builds submit run before S5_RELEASE_GATE and gcloud deploy releases create, apply, or targets rollback run before S6_DEPLOY_CLOSE; v1.1.0 blocks them (unit tests in tests/test_guard.py; the replay set has no CI/CD cases)."
   ],
   "rule_diff": {
     "added": [
@@ -34,6 +35,8 @@
       "R-RUN-PUBLIC-IAM",
       "R-RUN-DEPLOY-NO-IAP",
       "R-DEPLOY-BEFORE-RELEASE-GATE",
+      "R-CI-BEFORE-RELEASE-GATE",
+      "R-CD-BEFORE-DEPLOY-CLOSE",
       "R-SHELL-PROTECTED-PATH-WRITE",
       "R-PROTECTED-DREAM-ARTIFACTS"
     ],
