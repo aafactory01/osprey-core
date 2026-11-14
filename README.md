@@ -51,6 +51,10 @@ improvise them. The DP-001 guard blocks these commands before their stage.
 - Rollback: `python3 scripts/s6_rollback.py --execute` runs `gcloud deploy targets rollback` with a
   traffic fallback, then the release bounces to S3_BUILD. Without `--execute` the script is a dry-run.
 - Whole loop: `python3 scripts/workflow_ctl.py release --commit <sha>`.
+- IAM for the pipeline: the execution service account osprey-onboard-sa has `roles/clouddeploy.jobRunner`
+  (plus its existing Cloud Run deploy roles). The runtime service account osprey-core-run has read-only
+  `roles/cloudbuild.builds.viewer` and `roles/clouddeploy.viewer` (on osprey-core-cd only), so GET
+  `/api/pipeline` can read live status. A release never changes the service IAM policy.
 - Agent templates: the 13 agent templates of the team live in `templates/`.
 
 ## Health checks on Cloud Run

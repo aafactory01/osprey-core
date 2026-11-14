@@ -131,6 +131,10 @@ history.
 - tests/test_rollback.py::test_gcloud_http_failures_fail_closed
 - tests/test_rollback.py::test_timeout_fails_closed
 - tests/test_rollback.py::test_ambiguous_history_fails_closed
+- tests/test_rollback.py::test_auto_mode_plans_a_cloud_deploy_rollback_to_the_previous_release
+- tests/test_rollback.py::test_execute_runs_the_rollback_and_polls_its_rollout_to_success
+- tests/test_rollback.py::test_auto_falls_back_to_traffic_without_a_previous_release
+- tests/test_rollback.py::test_cloud_deploy_errors_fail_closed_without_traffic_changes
 
 ### AC-11 Fail-closed configuration
 Every tunable lives in config/*.json, validated by config/config_schema.json. Missing, unreadable,
@@ -237,6 +241,43 @@ Cloud Build and Cloud Deploy status from GET /api/pipeline on the S5 and S6 stag
 - tests/test_workflow_wiring.py::test_contract_route_table_agrees_when_declared
 - tests/test_workflow_wiring.py::test_workflow_doc_states_every_deterministic_command
 - tests/test_workflow_wiring.py::test_readme_documents_ci_cd
+- tests/test_cicd_manifests.py::test_image_is_tagged_with_short_sha_only
+- tests/test_cicd_manifests.py::test_release_packet_carries_every_field_and_the_pushed_digest
+- tests/test_cicd_manifests.py::test_run_service_preserves_live_service_settings
+- tests/test_cicd_manifests.py::test_clouddeploy_pipeline_target_location_and_execution_sa
+- tests/test_api_pipeline.py::test_default_document_is_honestly_not_configured
+- tests/test_api_pipeline.py::test_chaos_answers_200_with_a_degraded_document
+- tests/test_pipeline_status.py::test_happy_path_maps_build_and_newest_rollout
+- tests/test_ui_pipeline_contract.py::test_stage_ids_come_from_the_api_never_from_javascript
+
+### AC-19 Deterministic S5 and S6 scripts and the control loop
+`scripts/s5_release_gate.py` submits Cloud Build for a clean checkout of the commit, cross-checks the
+pushed digest against the build record and the uploaded packet, and seals the packet; a failed step
+returns its bounce route and transient faults exit 75. `scripts/s6_deploy.py` creates the Cloud Deploy
+release from the packet digest only and verifies that the serving revision runs it. `scripts/s6_exit.py`
+fails on any IAP, provenance, service-setting, or IAM drift and never logs the token.
+`scripts/workflow_ctl.py release` closes S6 or rolls back, re-probes, and bounces, with a ledger entry per
+transition.
+- tests/test_s5_release_gate.py::test_happy_path_submits_polls_crosschecks_and_writes_a_sealed_packet
+- tests/test_s5_release_gate.py::test_first_failed_step_picks_the_bounce_route
+- tests/test_s5_release_gate.py::test_transient_faults_exit_75_with_resumable_build_id
+- tests/test_s6_deploy.py::test_happy_path_creates_release_polls_rollout_and_verifies_serving
+- tests/test_s6_deploy.py::test_succeeded_rollout_must_serve_the_packet_with_provenance
+- tests/test_s6_exit.py::test_verify_passes_every_check_and_never_leaks_the_token
+- tests/test_s6_exit.py::test_http_gate_failures
+- tests/test_s6_exit.py::test_service_and_iam_drift_fails
+- tests/test_workflow_ctl.py::test_pass_path_closes_and_ledgers_every_transition
+- tests/test_workflow_ctl.py::test_s5_failure_bounces_without_touching_s6
+- tests/test_workflow_ctl.py::test_exit_gate_failure_rolls_back_reprobes_and_bounces
+
+### AC-20 Agent template export
+`templates/` holds the 13 agent templates (10 project templates and the qa-gemini, qa-opus, qa-fable
+council) exported verbatim from the Hub. `templates/MANIFEST.json` records every file's sha256 and size.
+- tests/test_templates_export.py::test_exactly_13_template_dirs_plus_manifest_and_readme
+- tests/test_templates_export.py::test_manifest_matches_dirs_ids_hashes_and_count
+- tests/test_templates_export.py::test_template_metadata_files_and_hashes
+- tests/test_templates_export.py::test_qa_council_harness_model_and_blob_source
+- tests/test_templates_export.py::test_no_secret_patterns_or_project_numbers
 
 ## Out of scope
 
