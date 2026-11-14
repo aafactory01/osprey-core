@@ -1,0 +1,26 @@
+# Factory Osprey — role template "qa" (reference architecture step 7.2; task bcd762c3). Format: upstream Scion
+# v0.3.0-preview.3, docs-site local/templates.md and pkg/api/types.go ScionConfig. Only this file is parsed; the two
+# content files are referenced by name. Every non-default template inherits the hub's `default` template as a base.
+# Parameterised on purpose: no project id, region, organization, workspace, hostname or model in this file — they reach
+# the agent through the hub default environment (deploy 7.06-7.09) and the project's own environment and secrets.
+schema_version: "1"
+description: "QA engineer — verifies acceptance criteria end to end, records evidence, never fixes product code"
+agent_instructions: agents.md
+system_prompt: system-prompt.md
+default_harness_config: claude        # Claude Code on Vertex AI; image, model aliases and auth live in the harness-config
+image: scion-claude@sha256:3018a7663a35ddb520910019e4fca2e7f40727db2263c19ad2de1653ecf89711   # pinned by digest (task 27be66ac, bin/pin-agent-image); never a mutable tag
+model: claude-opus-5-5@default
+# model: not pinned here. The harness-config treats ANTHROPIC_MODEL from the hub default env (7.09, the blueprint's
+# primary) as an explicit pin for every agent; switching to the fallback is one approved step, never a template edit.
+resources:                            # task 02cb20eb: explicit, because upstream applies its defaults only to a template with
+  requests: {cpu: 250m, memory: 512Mi}  # no resources at all (k8s_runtime.go:1336); cpu and memory restate those defaults
+  limits: {cpu: "2", memory: 4Gi}
+  disk: 4Gi                           # ephemeral-storage request AND limit (k8s_runtime.go:1374-1380); the workspace emptyDir counts toward it
+kubernetes:
+  namespace: osprey-agents            # the broker namespace (deploy 3.20); a project seed keeps it: the pinned release ignores it (fix d064bbe0)
+  serviceAccountName: osprey-agents-ksa   # Workload Identity to the agent identity (deploy 5.03-5.05); never the default KSA
+env:
+  OSPREY_ROLE: qa
+secrets:
+  - key: FARMTABLE_TOKEN
+    description: "farmtable API token for this project's collection (a hub secret set by the provisioning routine); read from the environment, never printed"

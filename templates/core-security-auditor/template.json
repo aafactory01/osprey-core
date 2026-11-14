@@ -1,0 +1,61 @@
+{
+  "agentConfig": {
+    "agent_instructions": "agents.md",
+    "default_harness_config": "antigravity",
+    "detached": null,
+    "env": {
+      "OSPREY_ROLE": "qa-tester"
+    },
+    "image": "scion-antigravity@sha256:61aa04a0d58d66bada3c356a50e572351eabd0d3fe10a22f4c1ee59b53808489",
+    "model": "Gemini 4 Argon (High)",
+    "resources": {
+      "disk": "2Gi",
+      "limits": {
+        "cpu": "500m",
+        "memory": "1Gi"
+      },
+      "requests": {
+        "cpu": "250m",
+        "memory": "512Mi"
+      }
+    },
+    "system_prompt": "system-prompt.md"
+  },
+  "contentHash": "sha256:ad2f28c3c293bb482bd27ad54b3a7430c71d0b38511084f178ea5e07a5eda465",
+  "created": "2026-11-14T19:25:31.84934Z",
+  "defaultHarnessConfig": "antigravity",
+  "description": "osprey-core security auditor: IAP posture, container hardening, secret hygiene, least-privilege IAM",
+  "displayName": "osprey-core Security Auditor",
+  "files": [
+    {
+      "mode": null,
+      "path": "agents.md",
+      "sha256": "78649fe93c0541587005dc3965581b6b7d83749e9c335d1d8db71b9b4fd38966",
+      "size": 1782
+    },
+    {
+      "mode": null,
+      "path": "scion-agent.yaml",
+      "sha256": "ccfd8f9d5175fd09d05016461ef83f3e3146dfc8f479b23c58d11eb74e6ab375",
+      "size": 513
+    },
+    {
+      "mode": null,
+      "path": "system-prompt.md",
+      "sha256": "ef41af3c02a20d218f6a5bcf301b178effa933aae15ba81fb621487bafad9550",
+      "size": 261
+    }
+  ],
+  "harness": "antigravity",
+  "id": "8975b7b9-c3a2-4a0a-9248-e5090163ef99",
+  "name": "core-security-auditor",
+  "scope": "project",
+  "scopeId": "862ead69-1199-47d0-ba6c-16084cef482b",
+  "slug": "core-security-auditor",
+  "source": {
+    "kind": "hub-api",
+    "path": "/api/v1/templates/8975b7b9-c3a2-4a0a-9248-e5090163ef99"
+  },
+  "status": "active",
+  "updated": "2026-11-14T20:07:07.247906Z"
+}

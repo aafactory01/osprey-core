@@ -1,0 +1,61 @@
+{
+  "agentConfig": {
+    "agent_instructions": "agents.md",
+    "default_harness_config": "antigravity",
+    "detached": null,
+    "env": {
+      "OSPREY_ROLE": "lead"
+    },
+    "image": "scion-antigravity@sha256:61aa04a0d58d66bada3c356a50e572351eabd0d3fe10a22f4c1ee59b53808489",
+    "model": "Gemini 4 Argon (High)",
+    "resources": {
+      "disk": "2Gi",
+      "limits": {
+        "cpu": "500m",
+        "memory": "1Gi"
+      },
+      "requests": {
+        "cpu": "250m",
+        "memory": "512Mi"
+      }
+    },
+    "system_prompt": "system-prompt.md"
+  },
+  "contentHash": "sha256:38c50dfad9b70e873f64d95dfff7e7f9ef8c73a99811ad277fee0825128b9ab1",
+  "created": "2026-11-14T19:25:15.357184Z",
+  "defaultHarnessConfig": "antigravity",
+  "description": "osprey-core spec writer: S1_SPEC API contracts, config schemas and numbered acceptance criteria",
+  "displayName": "osprey-core Spec Writer",
+  "files": [
+    {
+      "mode": null,
+      "path": "agents.md",
+      "sha256": "846ea59f2009ff4dcce6398066acbb8fb94e66a0790d9172f21e04397539e87c",
+      "size": 1696
+    },
+    {
+      "mode": null,
+      "path": "scion-agent.yaml",
+      "sha256": "1830f7597bf96edac25ce941cf83f94c2f7ae4cf2980a80fe6036832a11313df",
+      "size": 502
+    },
+    {
+      "mode": null,
+      "path": "system-prompt.md",
+      "sha256": "7ffb00148d7e2e40aa425761729bd82e8a09401410ba0f75dd182b665898e585",
+      "size": 251
+    }
+  ],
+  "harness": "antigravity",
+  "id": "978d3c11-6ad9-4c64-9ab9-0f5f1adc263b",
+  "name": "core-spec-writer",
+  "scope": "project",
+  "scopeId": "862ead69-1199-47d0-ba6c-16084cef482b",
+  "slug": "core-spec-writer",
+  "source": {
+    "kind": "hub-api",
+    "path": "/api/v1/templates/978d3c11-6ad9-4c64-9ab9-0f5f1adc263b"
+  },
+  "status": "active",
+  "updated": "2026-11-14T20:07:07.247906Z"
+}

@@ -1,0 +1,47 @@
+{
+  "agentConfig": {
+    "default_harness_config": "claude",
+    "detached": null,
+    "env": {
+      "ANTHROPIC_MODEL": "claude-opus-5-5@default"
+    },
+    "image": "scion-claude@sha256:3018a7663a35ddb520910019e4fca2e7f40727db2263c19ad2de1653ecf89711",
+    "model": "claude-opus-5-5@default"
+  },
+  "contentHash": "sha256:c62f8b47a0b78db4773593646cf00e3f59cf7a8f54742cfc80e3eccd8d70f740",
+  "created": "2026-11-11T04:49:07.326993Z",
+  "defaultHarnessConfig": "claude",
+  "description": "3-Model QA Council — Claude Opus 5.5",
+  "displayName": "QA Claude Opus 5.5",
+  "files": [
+    {
+      "mode": "0644",
+      "path": "agents.md",
+      "sha256": "1387209e3e4ec571099b645ce5b66545709db6c038ea004cd29ee3b908d95f9e",
+      "size": 11402
+    },
+    {
+      "mode": "0644",
+      "path": "scion-agent.yaml",
+      "sha256": "eb7ec9195795ab85a36ddcef29459c6be20df70b349f50fee971ee155cedc65e",
+      "size": 2265
+    },
+    {
+      "mode": "0644",
+      "path": "system-prompt.md",
+      "sha256": "7955929cdbe17d6df12fdedda877e1fcec250e3532a6b8ac30586ed4478bc9f2",
+      "size": 1111
+    }
+  ],
+  "harness": "claude",
+  "id": "24a17929-ae53-b0e4-b7d0-82fd38a14def",
+  "name": "qa-opus",
+  "scope": "global",
+  "slug": "qa-opus",
+  "source": {
+    "kind": "hub-blob-store",
+    "path": "templates/global/qa.blobs"
+  },
+  "status": "active",
+  "updated": "2026-11-14T20:37:48.019209Z"
+}

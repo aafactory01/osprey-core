@@ -1,0 +1,61 @@
+{
+  "agentConfig": {
+    "agent_instructions": "agents.md",
+    "default_harness_config": "antigravity",
+    "detached": null,
+    "env": {
+      "OSPREY_ROLE": "developer"
+    },
+    "image": "scion-antigravity@sha256:61aa04a0d58d66bada3c356a50e572351eabd0d3fe10a22f4c1ee59b53808489",
+    "model": "Gemini 4 Argon (High)",
+    "resources": {
+      "disk": "2Gi",
+      "limits": {
+        "cpu": "500m",
+        "memory": "1Gi"
+      },
+      "requests": {
+        "cpu": "250m",
+        "memory": "512Mi"
+      }
+    },
+    "system_prompt": "system-prompt.md"
+  },
+  "contentHash": "sha256:186834b9a5b3615ff2cb56030db8c78b2655b0a4c5d956bc741af5cad956f3ef",
+  "created": "2026-11-14T19:25:43.858885Z",
+  "defaultHarnessConfig": "antigravity",
+  "description": "osprey-core deployer: S5_RELEASE_GATE deterministic checks and S6_DEPLOY_CLOSE Cloud Run rollout behind IAP",
+  "displayName": "osprey-core Deployer",
+  "files": [
+    {
+      "mode": null,
+      "path": "agents.md",
+      "sha256": "7c9b0249c416944a4871b6e1923ca50f6a8f493a8e710c6c9380ae8cf472b313",
+      "size": 1754
+    },
+    {
+      "mode": null,
+      "path": "scion-agent.yaml",
+      "sha256": "4b49bdf76d593c9c331d2eddf0236ee15ced8f9ad2c16a9213034ccfd1ce6187",
+      "size": 516
+    },
+    {
+      "mode": null,
+      "path": "system-prompt.md",
+      "sha256": "28ca61cb4371b0fbd1127b5200e1f1ead9883ced02b1a91b67eba739c8153f29",
+      "size": 253
+    }
+  ],
+  "harness": "antigravity",
+  "id": "69fbfbf7-3be2-4c47-99fc-1b473b8283e6",
+  "name": "core-deployer",
+  "scope": "project",
+  "scopeId": "862ead69-1199-47d0-ba6c-16084cef482b",
+  "slug": "core-deployer",
+  "source": {
+    "kind": "hub-api",
+    "path": "/api/v1/templates/69fbfbf7-3be2-4c47-99fc-1b473b8283e6"
+  },
+  "status": "active",
+  "updated": "2026-11-14T20:07:07.247906Z"
+}

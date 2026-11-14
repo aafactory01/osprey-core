@@ -1,0 +1,61 @@
+{
+  "agentConfig": {
+    "agent_instructions": "agents.md",
+    "default_harness_config": "antigravity",
+    "detached": null,
+    "env": {
+      "OSPREY_ROLE": "qa-tester"
+    },
+    "image": "scion-antigravity@sha256:61aa04a0d58d66bada3c356a50e572351eabd0d3fe10a22f4c1ee59b53808489",
+    "model": "Gemini 4 Argon (High)",
+    "resources": {
+      "disk": "2Gi",
+      "limits": {
+        "cpu": "500m",
+        "memory": "1Gi"
+      },
+      "requests": {
+        "cpu": "250m",
+        "memory": "512Mi"
+      }
+    },
+    "system_prompt": "system-prompt.md"
+  },
+  "contentHash": "sha256:e5494689ad6363fe902d19ddab6927c2669e397bf6e7ef16b5f60b5b5ef339f4",
+  "created": "2026-11-14T19:25:28.098484Z",
+  "defaultHarnessConfig": "antigravity",
+  "description": "osprey-core reviewer: S4_REVIEW independent council review (Gemini / Claude Opus / Claude Fable)",
+  "displayName": "osprey-core Reviewer",
+  "files": [
+    {
+      "mode": null,
+      "path": "agents.md",
+      "sha256": "a7af4bd64881b5d5414d1ea9d3775f9ea1942de61d2f0b798a1c51b85cc0a31d",
+      "size": 1701
+    },
+    {
+      "mode": null,
+      "path": "scion-agent.yaml",
+      "sha256": "4959d07a25294913c34f3e3ef580237285a7bedf8e79a0c83d29409218c4a5cf",
+      "size": 505
+    },
+    {
+      "mode": null,
+      "path": "system-prompt.md",
+      "sha256": "87d29d5c10fbb06d6839619ba368a48f8823eeed14c7fd2e24ba0a186c04112a",
+      "size": 253
+    }
+  ],
+  "harness": "antigravity",
+  "id": "730e4d22-0a28-4fd7-b942-291a8a880d1d",
+  "name": "core-reviewer",
+  "scope": "project",
+  "scopeId": "862ead69-1199-47d0-ba6c-16084cef482b",
+  "slug": "core-reviewer",
+  "source": {
+    "kind": "hub-api",
+    "path": "/api/v1/templates/730e4d22-0a28-4fd7-b942-291a8a880d1d"
+  },
+  "status": "active",
+  "updated": "2026-11-14T20:07:07.247906Z"
+}

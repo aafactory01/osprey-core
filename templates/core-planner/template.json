@@ -1,0 +1,61 @@
+{
+  "agentConfig": {
+    "agent_instructions": "agents.md",
+    "default_harness_config": "antigravity",
+    "detached": null,
+    "env": {
+      "OSPREY_ROLE": "lead"
+    },
+    "image": "scion-antigravity@sha256:61aa04a0d58d66bada3c356a50e572351eabd0d3fe10a22f4c1ee59b53808489",
+    "model": "Gemini 4 Argon (High)",
+    "resources": {
+      "disk": "2Gi",
+      "limits": {
+        "cpu": "500m",
+        "memory": "1Gi"
+      },
+      "requests": {
+        "cpu": "250m",
+        "memory": "512Mi"
+      }
+    },
+    "system_prompt": "system-prompt.md"
+  },
+  "contentHash": "sha256:e5391d4c4f83c58185e89e3aa4bd530af0e5bf47f1e7a8529b39abaf6cd63a99",
+  "created": "2026-11-14T19:25:10.892181Z",
+  "defaultHarnessConfig": "antigravity",
+  "description": "osprey-core planner: S1_SPEC work-package decomposition, dependency graph, acceptance mapping",
+  "displayName": "osprey-core Planner",
+  "files": [
+    {
+      "mode": null,
+      "path": "agents.md",
+      "sha256": "1e3f40466858cd424160ce5fd97236287fe76824f7cbe22d7e3350e7f864afc5",
+      "size": 1662
+    },
+    {
+      "mode": null,
+      "path": "scion-agent.yaml",
+      "sha256": "b7bdf3e6acc018a08b98fdb0f7494ddc1d5e13a31aeaa31fca4a1f904b22bb88",
+      "size": 496
+    },
+    {
+      "mode": null,
+      "path": "system-prompt.md",
+      "sha256": "b479b602fed746d0431113d91693d2c7d46863c7b15afcb87591db54f73a15f8",
+      "size": 247
+    }
+  ],
+  "harness": "antigravity",
+  "id": "23c6d55b-85c2-41ef-af42-d8a0b8c71ac1",
+  "name": "core-planner",
+  "scope": "project",
+  "scopeId": "862ead69-1199-47d0-ba6c-16084cef482b",
+  "slug": "core-planner",
+  "source": {
+    "kind": "hub-api",
+    "path": "/api/v1/templates/23c6d55b-85c2-41ef-af42-d8a0b8c71ac1"
+  },
+  "status": "active",
+  "updated": "2026-11-14T20:07:07.247906Z"
+}

@@ -1,0 +1,61 @@
+{
+  "agentConfig": {
+    "agent_instructions": "agents.md",
+    "default_harness_config": "antigravity",
+    "detached": null,
+    "env": {
+      "OSPREY_ROLE": "developer"
+    },
+    "image": "scion-antigravity@sha256:61aa04a0d58d66bada3c356a50e572351eabd0d3fe10a22f4c1ee59b53808489",
+    "model": "Gemini 4 Argon (High)",
+    "resources": {
+      "disk": "2Gi",
+      "limits": {
+        "cpu": "500m",
+        "memory": "1Gi"
+      },
+      "requests": {
+        "cpu": "250m",
+        "memory": "512Mi"
+      }
+    },
+    "system_prompt": "system-prompt.md"
+  },
+  "contentHash": "sha256:5bb4777030f363937728eb3c5a5a60c50c7d268b131405c090682d338aa5ea56",
+  "created": "2026-11-14T19:25:36.881102Z",
+  "defaultHarnessConfig": "antigravity",
+  "description": "osprey-core docs writer: runbook, API reference, release notes and the S6 close packet",
+  "displayName": "osprey-core Docs Writer",
+  "files": [
+    {
+      "mode": null,
+      "path": "agents.md",
+      "sha256": "723bdb8d195805dd32d239928e4822485e8554fb869f6b6ab83f7874923c99d0",
+      "size": 1730
+    },
+    {
+      "mode": null,
+      "path": "scion-agent.yaml",
+      "sha256": "35cfa8cbcee1eac1620444b774cbe0f8586222b39c5f4fd9f474e5bf92781f44",
+      "size": 498
+    },
+    {
+      "mode": null,
+      "path": "system-prompt.md",
+      "sha256": "4d7894f056eff045b13a2bf9a49edde911a03425eae633dc9fda74c5c67984dd",
+      "size": 256
+    }
+  ],
+  "harness": "antigravity",
+  "id": "0b1db3d8-a7a6-4131-86ea-e49fcb89c36d",
+  "name": "core-docs-writer",
+  "scope": "project",
+  "scopeId": "862ead69-1199-47d0-ba6c-16084cef482b",
+  "slug": "core-docs-writer",
+  "source": {
+    "kind": "hub-api",
+    "path": "/api/v1/templates/0b1db3d8-a7a6-4131-86ea-e49fcb89c36d"
+  },
+  "status": "active",
+  "updated": "2026-11-14T20:07:07.247906Z"
+}
