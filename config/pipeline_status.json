@@ -1,4 +1,89 @@
 {
   "schema_version": "1.0.0",
-  "source_label": "Live CI/CD status settings (config/pipeline_status.json): the console reads Cloud Build and Cloud Deploy state for the serving revision."
+  "source_label": "Live CI/CD status settings (config/pipeline_status.json): the console reads Cloud Build and Cloud Deploy state for the serving revision.",
+  "cache": {
+    "ttl_ms": 20000,
+    "error_ttl_ms": 5000
+  },
+  "http": {
+    "call_timeout_ms": 2500,
+    "budget_ms": 6000,
+    "max_response_bytes": 2097152,
+    "max_detail_chars": 240,
+    "accept": "application/json",
+    "authorization_scheme": "Bearer"
+  },
+  "metadata": {
+    "host_env_var": "GCE_METADATA_HOST",
+    "default_host": "metadata.google.internal",
+    "token_url_template": "http://{host}/computeMetadata/v1/instance/service-accounts/default/token",
+    "header_name": "Metadata-Flavor",
+    "header_value": "Google",
+    "refresh_margin_ms": 60000
+  },
+  "taxonomy": {
+    "by_http_status": {
+      "401": "UNAUTHENTICATED",
+      "403": "PERMISSION_DENIED",
+      "404": "NOT_FOUND",
+      "408": "TIMEOUT",
+      "429": "RATE_LIMITED",
+      "500": "UNAVAILABLE",
+      "502": "UNAVAILABLE",
+      "503": "UNAVAILABLE",
+      "504": "TIMEOUT"
+    },
+    "default_http": "UNAVAILABLE"
+  },
+  "labels": {
+    "unavailable": "Unavailable: {taxonomy}",
+    "not_deployed": "Not deployed by Cloud Deploy",
+    "missing_env": "Not configured: {env_var} is not set on this revision"
+  },
+  "default_tone": "neutral",
+  "provenance_unset_values": ["unset"],
+  "ci": {
+    "build_url_template": "https://cloudbuild.googleapis.com/v1/projects/{project}/locations/{region}/builds/{build_id}",
+    "console_url_template": "https://console.cloud.google.com/cloud-build/builds;region={region}/{build_id}?project={project}",
+    "live_label": "Live from Cloud Build API",
+    "bounce_to_roles": ["build", "verify"],
+    "status_tones": {
+      "SUCCESS": "ok",
+      "FAILURE": "crit",
+      "INTERNAL_ERROR": "crit",
+      "TIMEOUT": "crit",
+      "CANCELLED": "crit",
+      "EXPIRED": "crit",
+      "QUEUED": "warn",
+      "PENDING": "warn",
+      "WORKING": "warn",
+      "STATUS_UNKNOWN": "neutral",
+      "UNKNOWN": "neutral"
+    }
+  },
+  "cd": {
+    "rollouts_url_template": "https://clouddeploy.googleapis.com/v1/projects/{project}/locations/{region}/deliveryPipelines/{pipeline}/releases/{release}/rollouts?pageSize={page_size}",
+    "page_size": 100,
+    "console_url_template": "https://console.cloud.google.com/deploy/delivery-pipelines/{region}/{pipeline}/releases/{release}/rollouts?project={project}",
+    "live_label": "Live from Cloud Deploy API",
+    "control_loop": [
+      {"label": "s6_exit IAP probe"},
+      {"label": "s6_rollback"},
+      {"stage_role": "build"}
+    ],
+    "status_tones": {
+      "SUCCEEDED": "ok",
+      "FAILED": "crit",
+      "CANCELLED": "crit",
+      "HALTED": "crit",
+      "APPROVAL_REJECTED": "crit",
+      "IN_PROGRESS": "warn",
+      "PENDING": "warn",
+      "PENDING_RELEASE": "warn",
+      "PENDING_APPROVAL": "warn",
+      "CANCELLING": "warn",
+      "STATE_UNSPECIFIED": "neutral",
+      "UNKNOWN": "neutral"
+    }
+  }
 }

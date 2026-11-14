@@ -39,7 +39,55 @@
       "path": "config/pipeline_status.json",
       "spec": {"type": "dict", "required": {
         "schema_version": {"type": "str", "min_length": 1},
-        "source_label": {"type": "str", "min_length": 1}
+        "source_label": {"type": "str", "min_length": 1},
+        "cache": {"type": "dict", "required": {
+          "ttl_ms": {"type": "int", "min": 0, "max": 3600000},
+          "error_ttl_ms": {"type": "int", "min": 0, "max": 3600000}
+        }},
+        "http": {"type": "dict", "required": {
+          "call_timeout_ms": {"type": "int", "min": 1, "max": 60000},
+          "budget_ms": {"type": "int", "min": 1, "max": 60000},
+          "max_response_bytes": {"type": "int", "min": 1, "max": 16777216},
+          "max_detail_chars": {"type": "int", "min": 1, "max": 4096},
+          "accept": {"type": "str", "min_length": 1},
+          "authorization_scheme": {"type": "str", "min_length": 1}
+        }},
+        "metadata": {"type": "dict", "required": {
+          "host_env_var": {"type": "str", "min_length": 1},
+          "default_host": {"type": "str", "min_length": 1},
+          "token_url_template": {"type": "str", "min_length": 1},
+          "header_name": {"type": "str", "min_length": 1},
+          "header_value": {"type": "str", "min_length": 1},
+          "refresh_margin_ms": {"type": "int", "min": 0, "max": 3600000}
+        }},
+        "taxonomy": {"type": "dict", "required": {
+          "by_http_status": {"type": "dict", "min_items": 1, "values": {"type": "str", "min_length": 1}},
+          "default_http": {"type": "str", "min_length": 1}
+        }},
+        "labels": {"type": "dict", "required": {
+          "unavailable": {"type": "str", "min_length": 1},
+          "not_deployed": {"type": "str", "min_length": 1},
+          "missing_env": {"type": "str", "min_length": 1}
+        }},
+        "default_tone": {"type": "str", "enum": ["ok", "warn", "crit", "neutral"]},
+        "provenance_unset_values": {"type": "list", "items": {"type": "str", "min_length": 1}},
+        "ci": {"type": "dict", "required": {
+          "build_url_template": {"type": "str", "min_length": 1},
+          "console_url_template": {"type": "str", "min_length": 1},
+          "live_label": {"type": "str", "min_length": 1},
+          "bounce_to_roles": {"type": "list", "items": {"type": "str", "min_length": 1}},
+          "status_tones": {"type": "dict", "min_items": 1, "values": {"type": "str", "enum": ["ok", "warn", "crit", "neutral"]}}
+        }},
+        "cd": {"type": "dict", "required": {
+          "rollouts_url_template": {"type": "str", "min_length": 1},
+          "page_size": {"type": "int", "min": 1, "max": 1000},
+          "console_url_template": {"type": "str", "min_length": 1},
+          "live_label": {"type": "str", "min_length": 1},
+          "control_loop": {"type": "list", "min_items": 1, "items": {"type": "dict", "optional": {
+            "label": {"type": "str", "min_length": 1}, "stage_role": {"type": "str", "min_length": 1}
+          }}},
+          "status_tones": {"type": "dict", "min_items": 1, "values": {"type": "str", "enum": ["ok", "warn", "crit", "neutral"]}}
+        }}
       }}
     },
     "health": {

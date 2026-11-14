@@ -1,6 +1,6 @@
 """HTTP smoke of every endpoint against a running server (container contract check).
 
-Usage: python3 qa/smoke_endpoints.py <base_url> <out_json> [expect_key: yes|no]
+Usage: python3 qa/smoke_endpoints.py <base_url> <out_json> [expect_key: yes|no] [pipeline: any|not_configured|unavailable|live]
 """
 
 from __future__ import annotations
@@ -13,6 +13,8 @@ import urllib.request
 
 BASE, OUT = sys.argv[1].rstrip("/"), sys.argv[2]
 EXPECT_KEY = (sys.argv[3] if len(sys.argv) > 3 else "yes") == "yes"
+EXPECT_PIPELINE = sys.argv[4] if len(sys.argv) > 4 else "any"
+PIPELINE_KEYS = {"source_label", "stage_ids", "provenance", "ci", "cd", "fetched_at", "cache_age_ms"}
 
 
 def call(method, path, body=None):
@@ -29,7 +31,8 @@ def call(method, path, body=None):
         payload = json.loads(raw)
     except ValueError:
         payload = raw.decode("utf-8", "replace")[:80]
-    return {"method": method, "path": path, "status": status, "ms": ms, "trace_id": headers.get("X-Trace-Id")}, payload
+    return {"method": method, "path": path, "status": status, "ms": ms, "trace_id": headers.get("X-Trace-Id"),
+            "cache_control": headers.get("Cache-Control")}, payload
 
 
 checks = []
@@ -55,6 +58,21 @@ expect("GET", "/api/health", 200, lambda p: p["status"] == "HEALTHY")
 expect("GET", "/api/workflow", 200, lambda p: [s["status"] for s in p["stages"]].count("active") == 1
        and p["scenario"] == "sample" and "not live workflow state" in p["source_label"])
 expect("GET", "/api/agents", 200, lambda p: p["count"] == 25)
+
+
+def pipeline_ok(p):
+    """Contract keys, stage ids threaded through, and honest sources (no provenance -> not_configured, errors typed)."""
+    blocks = ((p["ci"], "status"), (p["cd"], "rollout_state"))
+    honest = all(b["source"] != "unavailable" or (b[key] == "UNKNOWN" and b["error"]["taxonomy"]) for b, key in blocks)
+    unconfigured = p["provenance"]["deployed_by_cloud_deploy"] or p["cd"]["source"] == "not_configured"
+    wanted = EXPECT_PIPELINE == "any" or all(b["source"] == EXPECT_PIPELINE for b, _ in blocks)
+    return (PIPELINE_KEYS <= set(p) and p["ci"]["stage"] == p["stage_ids"]["release_gate"]
+            and p["cd"]["stage"] == p["stage_ids"]["deploy_close"] and honest and unconfigured and wanted)
+
+
+expect("GET", "/api/pipeline", 200, pipeline_ok)
+checks[-1]["ok"] = checks[-1]["ok"] and checks[-1]["cache_control"] == "no-store"
+expect("POST", "/api/pipeline", 405, lambda p: p["error"]["code"] == "METHOD_NOT_ALLOWED", body={}, label="POST /api/pipeline")
 expect("GET", "/api/telemetry?limit=3", 200, lambda p: p["count"] == 3)
 expect("GET", "/api/telemetry?limit=0", 400, lambda p: p["error"]["code"] == "INVALID_LIMIT")
 expect("GET", "/api/task-backends", 200, lambda p: len(p["backends"]) == 6 and p["source_label"].startswith("Projection only"))
