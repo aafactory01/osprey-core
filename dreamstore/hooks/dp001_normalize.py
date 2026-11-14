@@ -1,10 +1,15 @@
 """Shell command normalization for the DP-001 guard (engine level, policy versions untouched).
 
-Recursive force deletes are rewritten into one canonical form before policy regexes run:
-split or long flags (`-r -f`, `-f -r`, `--recursive --force`) become `-rf`, and targets that resolve
-to a protected location (the filesystem root, the home directory, the working tree root, any
-ancestor of it, or a root-level glob such as `./*`) become `/`. Routine cleanup inside the working
-tree (`build/`, `dist/`, `.pytest_cache`) is left as written. Pure functions: no I/O, no clock.
+Risky commands are rewritten into one canonical form before policy regexes run:
+- Recursive force deletes: split or long flags (`-r -f`, `--recursive --force`) become `-rf`, and
+  targets that resolve to a protected location (the filesystem root, the home directory, the
+  working tree root or any ancestor of it, `$PWD`/`$(pwd)`, or a root-level glob such as `./*`)
+  become `/`. `find <protected> -delete` (or `-exec rm`) is treated as the same delete.
+- kubectl: the `k` alias becomes `kubectl`; reading secrets (`get`/`describe`/`edit` with a
+  `secret`, `secrets`, or `secret/<name>` resource, flags in any position) becomes
+  `kubectl get secrets`; deleting a namespace becomes `kubectl delete namespace`.
+Routine cleanup inside the working tree (`rm -rf build/`, `find build -delete`) is left as written.
+Pure functions: no I/O, no clock.
 """
 
 from __future__ import annotations
@@ -12,12 +17,22 @@ from __future__ import annotations
 import posixpath
 import re
 import shlex
+from typing import Callable
 
 CLAUSE_SPLIT = re.compile(r"(\s*(?:&&|\|\||;|\||\n)\s*)")
+SECRET_RESOURCE = re.compile(r"^secrets?(?:/\S*)?$")
+NAMESPACE_RESOURCE = re.compile(r"^(?:ns|namespaces?)(?:/\S*)?$")
 DELETE_COMMAND = "rm"
+FIND_COMMAND = "find"
+KUBECTL = "kubectl"
 CANONICAL_FLAGS = "-rf"
 CANONICAL_TARGET = "/"
+CANONICAL_DELETE = f"{DELETE_COMMAND} {CANONICAL_FLAGS} {CANONICAL_TARGET}"
 DOT_SEGMENTS = frozenset({".", ".."})
+FIND_LEADING_OPTIONS = frozenset({"-H", "-L", "-P"})
+KUBECTL_NAMES = frozenset({KUBECTL, "k"})
+SECRET_READ_VERBS = frozenset({"get", "describe", "edit"})
+NAMESPACE_FLAGS = frozenset({"-n", "--namespace"})
 
 
 def _env_forms(*names: str) -> frozenset[str]:
@@ -26,7 +41,7 @@ def _env_forms(*names: str) -> frozenset[str]:
 
 
 HOME_FORMS = frozenset({"~"}) | _env_forms("HOME")
-TREE_ROOT_FORMS = _env_forms("PWD", "REPO_ROOT")
+TREE_ROOT_FORMS = _env_forms("PWD", "REPO_ROOT") | frozenset({"$(pwd)", "`pwd`"})
 
 
 def _base(target: str) -> str:
@@ -62,14 +77,51 @@ def is_protected_target(target: str, cwd: object) -> bool:
     return all(part in DOT_SEGMENTS for part in posixpath.normpath(base).split("/"))
 
 
-def _normalize_clause(clause: str, cwd: object) -> str:
-    try:
-        tokens = shlex.split(clause, posix=True)
-    except ValueError:
-        return clause
-    names = [posixpath.basename(token) for token in tokens]
+def _find_clause(tokens: list[str], names: list[str], cwd: object) -> str | None:
+    """`find <protected root> ... -delete` (or `-exec rm`) is a recursive delete of that root."""
+    if FIND_COMMAND not in names:
+        return None
+    args = tokens[names.index(FIND_COMMAND) + 1:]
+    while args and args[0] in FIND_LEADING_OPTIONS:
+        args = args[1:]
+    roots: list[str] = []
+    for token in args:
+        if token.startswith(("-", "(", "!")):
+            break
+        roots.append(token)
+    deletes = "-delete" in args or any(posixpath.basename(token) == DELETE_COMMAND for token in args)
+    if deletes and any(is_protected_target(root, cwd) for root in roots or ["."]):
+        return CANONICAL_DELETE
+    return None
+
+
+def _kubectl_clause(tokens: list[str], names: list[str], cwd: object) -> str | None:
+    """Canonical kubectl form, independent of the `k` alias and of flag positions."""
+    hits = [index for index, name in enumerate(names)
+            if name == KUBECTL or (name in KUBECTL_NAMES and (index == 0 or names[index - 1] == "sudo"))]
+    if not hits:
+        return None
+    args = tokens[hits[0] + 1:]
+    words: list[str] = []
+    skip_value = False
+    for token in args:
+        if skip_value:
+            skip_value = False
+        elif token in NAMESPACE_FLAGS:
+            skip_value = True
+        elif not token.startswith("-"):
+            words.append(token)
+    parts = [part for word in words for part in word.split(",") if part]
+    if any(word in SECRET_READ_VERBS for word in words) and any(SECRET_RESOURCE.match(part) for part in parts):
+        return f"{KUBECTL} get secrets"
+    if "delete" in words and any(NAMESPACE_RESOURCE.match(part) for part in parts):
+        return f"{KUBECTL} delete namespace"
+    return " ".join([*tokens[:hits[0]], KUBECTL, *args])
+
+
+def _delete_clause(tokens: list[str], names: list[str], cwd: object) -> str | None:
     if DELETE_COMMAND not in names:
-        return clause
+        return None
     start = names.index(DELETE_COMMAND)
     recursive = force = no_preserve = options_done = False
     targets: list[str] = []
@@ -87,14 +139,30 @@ def _normalize_clause(clause: str, cwd: object) -> str:
             recursive |= bool(letters & set("rR"))
             force |= "f" in letters
     if not (recursive and force):
-        return clause
+        return None
     protected = any(is_protected_target(target, cwd) for target in targets)
     rest = [CANONICAL_TARGET] if protected else targets
     extra = ["--no-preserve-root"] if no_preserve else []
     return " ".join([*tokens[:start], DELETE_COMMAND, CANONICAL_FLAGS, *rest, *extra])
 
 
+HANDLERS: tuple[Callable[[list[str], list[str], object], str | None], ...] = (_find_clause, _kubectl_clause, _delete_clause)
+
+
+def _normalize_clause(clause: str, cwd: object) -> str:
+    try:
+        tokens = shlex.split(clause, posix=True)
+    except ValueError:
+        return clause
+    names = [posixpath.basename(token) for token in tokens]
+    for handler in HANDLERS:
+        result = handler(tokens, names, cwd)
+        if result is not None:
+            return result
+    return clause
+
+
 def normalize_shell(text: str, cwd: object = None) -> str:
-    """Canonicalize every recursive force delete in a (possibly compound) shell command."""
+    """Canonicalize risky invocations in a (possibly compound) shell command."""
     parts = CLAUSE_SPLIT.split(text)
     return "".join(part if CLAUSE_SPLIT.fullmatch(part) else _normalize_clause(part, cwd) for part in parts)

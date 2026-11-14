@@ -73,6 +73,32 @@ def test_malformed_bodies_are_structured_400(client, raw, code):
     assert resp.status_code == 400 and resp.get_json()["error"]["code"] == code
 
 
+@pytest.mark.parametrize("path,body", [
+    ("/api/task-backend", '{"backend": "jira"}'), ("/api/receipts/verify", '{"chain": []}'), ("/api/dreams/replay", "{}"),
+])
+@pytest.mark.parametrize("content_type", ["text/plain", "application/x-www-form-urlencoded", None],
+                         ids=["text", "form", "missing"])
+def test_non_json_content_type_is_structured_415(client, path, body, content_type):
+    kwargs = {"content_type": content_type} if content_type else {}
+    resp = client.post(path, data=body, **kwargs)
+    err = resp.get_json()["error"]
+    assert resp.status_code == 415 and err["code"] == "UNSUPPORTED_MEDIA_TYPE" and "application/json" in err["message"]
+
+
+def test_json_with_charset_is_accepted(client):
+    resp = client.post("/api/task-backend", data='{"backend": "linear"}', content_type="application/json; charset=utf-8")
+    assert resp.status_code == 200 and resp.get_json()["selected"] == "linear"
+
+
+def test_ui_fetch_sends_json_content_type():
+    from app.config_store import REPO_ROOT
+
+    api_js = (REPO_ROOT / "app" / "static" / "js" / "api.js").read_text()
+    assert "init.headers['Content-Type'] = 'application/json';" in api_js
+    callers = "".join((REPO_ROOT / "app" / "static" / "js" / name).read_text() for name in ("backends.js", "dreams.js", "receipts.js"))
+    assert callers.count("method: 'POST'") == callers.count("method: 'POST', body:") == 4
+
+
 def test_dreams_scorecard_is_computed_live(client):
     body = client.get("/api/dreams").get_json()
     replay = body["replay"]

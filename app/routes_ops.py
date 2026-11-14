@@ -12,7 +12,7 @@ from flask import Blueprint, Response, current_app, jsonify
 
 from app import telemetry
 from app.config_store import CONFIG_SCHEMA, ConfigError, ConfigStore
-from app.errors import ApiError, read_json_object
+from app.errors import ApiError, read_json_object, require_json_content_type
 from app.receipts import describe_chain, load_key, verify_chain, verify_receipt
 from app.workflow_service import TaskBackendService, load_task_backend_module
 from dreamstore.hooks.dp001_policy import PolicyError
@@ -114,6 +114,7 @@ def dreams() -> Response:
 
 @ops_bp.post("/api/dreams/replay")
 def dreams_replay() -> Response:
+    require_json_content_type()
     return jsonify(_dreams_payload(time.perf_counter()))
 
 

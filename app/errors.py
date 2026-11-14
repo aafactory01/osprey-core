@@ -8,7 +8,7 @@ from http import HTTPStatus
 from typing import Any
 
 from flask import Flask, Response, current_app, jsonify, request
-from werkzeug.exceptions import HTTPException
+from werkzeug.exceptions import HTTPException, UnsupportedMediaType
 
 from app import telemetry
 from app.config_store import ConfigError, reject_json_constant
@@ -73,8 +73,15 @@ def _ensure_finite(value: Any) -> None:
             stack.extend(item)
 
 
+def require_json_content_type() -> None:
+    """JSON POST endpoints accept only application/json (or +json); anything else is a structured 415."""
+    if not request.is_json:
+        raise UnsupportedMediaType("request Content-Type must be application/json")
+
+
 def read_json_object() -> dict[str, Any]:
     """Decode the request body as a JSON object (UTF-8, finite numbers only) or raise ApiError."""
+    require_json_content_type()
     raw = request.get_data(cache=False)
     if not raw or not raw.strip():
         raise ApiError(HTTPStatus.BAD_REQUEST, "EMPTY_BODY", "request body must be a JSON object")

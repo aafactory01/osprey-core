@@ -57,6 +57,9 @@ secret reads and echoes, impersonation, and writes to protected paths.
 - tests/test_guard.py::test_policy_validation_rejects_defects
 - tests/test_guard_normalize.py::test_delete_evasions_are_blocked
 - tests/test_guard_normalize.py::test_routine_cleanup_stays_allowed
+- tests/test_guard_normalize.py::test_kubectl_secret_reads_are_blocked_in_any_form
+- tests/test_guard_normalize.py::test_working_tree_and_find_deletes_are_blocked
+- tests/test_guard_normalize.py::test_scoped_find_and_cleanup_stay_allowed
 - tests/test_guard_cli.py::test_block_exits_two_with_reason_on_stderr
 - tests/test_guard_cli.py::test_bad_stdin_fails_closed
 - tests/test_guard_cli.py::test_missing_policy_fails_closed
@@ -137,6 +140,8 @@ that disappear while the server runs. No magic numbers or inline data tables in 
 - tests/test_config_and_chaos.py::test_concurrent_requests_while_config_flaps_never_500
 - tests/test_api_core.py::test_readyz_503_when_any_config_is_broken
 - tests/test_api_core.py::test_http_error_codes_come_from_config_not_the_interpreter
+- tests/test_api_ops.py::test_non_json_content_type_is_structured_415
+- tests/test_api_ops.py::test_ui_fetch_sends_json_content_type
 - tests/test_ast_zero_hardcoding.py::test_wire_codes_never_use_interpreter_enum_names
 - tests/test_ast_zero_hardcoding.py::test_no_magic_numbers
 - tests/test_ast_zero_hardcoding.py::test_no_inline_data_literals

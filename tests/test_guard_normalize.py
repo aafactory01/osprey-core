@@ -66,6 +66,44 @@ def test_protected_paths_rule_still_sees_delete_targets(v11):
     assert evaluate(shell("rm -r -f .workflow/"), v11).rule_id == "R-SHELL-PROTECTED-PATH-WRITE"
 
 
+@pytest.mark.parametrize("command", [
+    "kubectl get -n prod secrets", "kubectl -n ns get secret x -o yaml", "k get secrets", "sudo k get secret db",
+    "kubectl get secret/db-pass", "kubectl describe secrets", "kubectl get -o yaml secrets",
+    "kubectl --context prod get pods,secrets -A", "kubectl edit secret app-token",
+])
+def test_kubectl_secret_reads_are_blocked_in_any_form(v11, command):
+    assert evaluate(shell(command), v11).rule_id == "R-KUBECTL-SECRETS"
+
+
+@pytest.mark.parametrize("command", ["k delete ns prod", "kubectl delete -n x namespace y", "kubectl delete namespace/prod"])
+def test_kubectl_namespace_deletes_are_blocked_in_any_form(v11, command):
+    assert evaluate(shell(command), v11).rule_id == "R-KUBECTL-DELETE-NS"
+
+
+@pytest.mark.parametrize("command", [
+    "kubectl get pods -n secrets", "kubectl get pods -l app=secret", "k get deployments",
+    "kubectl create secret generic x --from-literal=a=b", "kubectl logs secret-rotator-0",
+])
+def test_routine_kubectl_stays_allowed(v11, command):
+    assert evaluate(shell(command), v11).decision == "allow"
+
+
+@pytest.mark.parametrize("cwd", [CWD, None], ids=["with-cwd", "no-cwd"])
+@pytest.mark.parametrize("command", [
+    'rm -rf "$(pwd)"', "rm -rf $PWD", 'rm -rf "$PWD"/*', "rm -rf `pwd`", "find / -delete", "find ~ -delete",
+    "find . -delete", "find -L / -delete", "find / -exec rm -rf {} +", "find $HOME -type f -delete",
+])
+def test_working_tree_and_find_deletes_are_blocked(v11, command, cwd):
+    decision = evaluate(shell(command, cwd), v11)
+    assert decision.blocked and decision.rule_id == "R-RM-RF"
+
+
+@pytest.mark.parametrize("command", ["find build -delete", "rm -rf build/", "find build -name '*.o' -delete",
+                                     "find . -name '*.pyc' -print", "rm -rf $(pwd)/build"])
+def test_scoped_find_and_cleanup_stay_allowed(v11, command):
+    assert evaluate(shell(command), v11).decision == "allow"
+
+
 # sha256 of config/dp001_guard_policy.json as committed in 1ba7d2a; the engine fix must not change it.
 POLICY_SHA256 = "209c04e341ad07599397b4aa9b2cdafc5fff4d0314c73c041c465aecfb22a93c"
 
