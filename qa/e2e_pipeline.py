@@ -1,7 +1,7 @@
 """Playwright checks for the live CI/CD panels (release gate: Cloud Build, deploy close: Cloud Deploy).
 
 Requires Playwright (not a runtime or pytest dependency). Usage:
-  python3 qa/e2e_pipeline.py <base_url> <out_dir> <label> --expect not_configured|unavailable|fixture
+  python3 qa/e2e_pipeline.py <base_url> <out_dir> <label> --expect not_configured|unavailable|fixture|live
 Variants: desktop 1440x900 light and mobile 390x844 dark. Stage ids come from GET /api/pipeline `stage_ids`.
 `--expect fixture` replaces the /api/pipeline response inside the browser with a rendering fixture built from
 the real document (desktop: SUCCESS build + SUCCEEDED rollout, mobile: FAILURE + FAILED) to exercise the live
@@ -174,6 +174,8 @@ def run_variant(browser, args, out, device, width, height, theme):
                 sweep.check("from revision env" in text or role == "cd", f"{role} provenance fallback not marked")
             if args.expect == "fixture":
                 sweep.check(block["source"] == "live" and FIXTURE_NOTE.strip() in text, f"{role} fixture not labelled")
+            if args.expect == "live":
+                sweep.check(block["source"] == "live" and block["error"] is None, f"{role} is not live: {block['source_label']}")
             if role == "ci":
                 for target in block["bounce_to"]:
                     sweep.check(target in text, f"bounce route {target} missing")
@@ -269,7 +271,7 @@ def main():
     parser.add_argument("base")
     parser.add_argument("out")
     parser.add_argument("label")
-    parser.add_argument("--expect", choices=["not_configured", "unavailable", "fixture"], required=True)
+    parser.add_argument("--expect", choices=["not_configured", "unavailable", "fixture", "live"], required=True)
     args = parser.parse_args()
     args.base = args.base.rstrip("/")
     out = Path(args.out)
