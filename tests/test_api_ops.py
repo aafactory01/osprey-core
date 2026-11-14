@@ -14,7 +14,7 @@ from app.receipts import canonical_json
 from tests.helpers import HEX32, HEX64, edit_json
 
 BACKENDS = ["farmtable", "github", "jira", "gitlab", "beads", "linear"]
-STAGES = ["S1_SPEC", "S2_CODE", "S3_TEST", "S4_REVIEW", "S5_RELEASE_GATE", "S6_DEPLOY_CLOSE"]
+STAGES = ["S1_SPEC", "S2_TESTS", "S3_BUILD", "S4_VERIFY_QA", "S5_RELEASE_GATE", "S6_DEPLOY_CLOSE"]
 KEY_PATTERNS = {
     "farmtable": r"^CORE-T-\d+$", "github": r"^aafactory01/osprey-core#\d+$", "jira": r"^CORE-\d+$",
     "gitlab": r"^platform/osprey-core#\d+$", "beads": r"^bd-[0-9a-f]{4}$", "linear": r"^COR-\d+$",

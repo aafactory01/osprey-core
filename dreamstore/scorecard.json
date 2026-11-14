@@ -95,7 +95,7 @@
       "candidate_rule": "R-PROTECTED-WORKFLOW-PATHS",
       "expected": "block",
       "id": "SR-07",
-      "title": "Edit the workflow definition during S2"
+      "title": "Edit the workflow definition during S3"
     },
     {
       "baseline": "allow",
@@ -148,10 +148,10 @@
     ],
     "verdict": "PASS"
   },
-  "generated_at": "2026-11-14T20:08:27Z",
+  "generated_at": "2026-11-14T22:22:48Z",
   "latency_ms": 12,
   "method": "shadow replay of curated scenario traces (PreToolUse events) through dreamstore.hooks.dp001_policy.evaluate",
   "proposal_id": "DP-001",
   "skill": "ops-release-guardrails",
-  "trace_id": "169c637efda54a5aba6f770d8e88b224"
+  "trace_id": "a0691c8185bf46edb73bc133798e5d45"
 }

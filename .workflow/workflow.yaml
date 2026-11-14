@@ -1,10 +1,17 @@
-# Hybrid release workflow for osprey-core.
-# Agentic stages (S1-S4): agents plan and execute; gates check evidence before a stage closes.
-# Deterministic stages (S5-S6): fixed scripts only; the DP-001 guard blocks S6 commands before S5.
-# The console serves the same stages from config/workflow_stages.json (tests keep both in sync).
+# Hybrid release workflow for osprey-core: the six-stage control loop of the factory workflow kit.
+# S1-S4 are agentic: agents plan and execute, and a deterministic exit_gate grades the evidence (Mode 1).
+# S5-S6 are deterministic: fixed scripts only, no agent judgment. S5 runs Cloud Build CI and writes the
+# immutable @sha256 release packet; S6 creates a Google Cloud Deploy release, probes IAP, and rolls back.
+# A failed deterministic check bounces the release upstream (bounce_to, Mode 2).
+# The console serves the same stages from config/workflow_stages.json. tests/test_workflow_wiring.py keeps
+# both files in sync with config/cicd.json, the DP-001 stage_order, and the agent roster.
 # Stage progress shown in the console is a labelled sample scenario, not live workflow state.
 name: hybrid
-version: "2.0.0"
+version: "3.0.0"
+controller: python3 scripts/workflow_ctl.py release --commit <sha>
+evidence_dir: .workflow/evidence
+evidence_note: Git-ignored runtime evidence (evidence/ in .gitignore); only the deterministic scripts write it.
+pipeline_status_api: GET /api/pipeline
 guard:
   hook: dreamstore/hooks/dp001_pre_tool_guard.py
   policy: config/dp001_guard_policy.json
@@ -13,73 +20,160 @@ task_backend:
   registry: .workflow/task_backend.py
   config: config/task_backends.json
   options: [farmtable, github, jira, gitlab, beads, linear]
+failure_modes:
+  - mode: 1
+    name: Agentic remediation
+    applies_to: agentic stages
+    action: The exit_gate fails; the stage stays open and its owners fix the defect from the gate output (attempt 1 to max_attempts).
+  - mode: 2
+    name: Upstream or deterministic bounce
+    applies_to: deterministic stages and upstream drift
+    action: A deterministic check fails; S6 first runs rollback_command and re-probes; then the bounce_to stage reopens and every later stage is blocked again.
+  - mode: 3
+    name: Human gate reject
+    applies_to: stages with human_gate required (S1_SPEC, S5_RELEASE_GATE)
+    action: The stage restarts at attempt 0 with the human feedback.
+  - mode: 4
+    name: Transient failure
+    applies_to: every command and gate
+    exit_code: 75
+    backoff_seconds: [1, 2, 4]
+    action: Retry with backoff; a transient failure does not use an attempt.
+  - mode: 5
+    name: Three strikes
+    applies_to: every stage
+    strikes: 3
+    action: The third failed attempt halts the workflow (HALTED_ESCALATED) and alerts the human operator.
 stages:
   - id: S1_SPEC
-    mode: agentic
+    title: Spec
+    execution: agentic
     owners: [core-coordinator, core-planner, core-spec-writer]
+    human_gate: required
     entry_gates:
       - Request is linked to an Outcome and Goal in the task backend
       - No open S1 task exists for the same goal
     exit_gates:
-      - SPEC.md lists acceptance criteria and a test plan
-      - core-coordinator approval is captured as a signed receipt
+      - SPEC.md lists numbered acceptance criteria (AC-01 to AC-NN) and a test plan
+      - core-coordinator approval is captured as a signed receipt (human gate)
+    exit_gate: "python -m pytest -q -p no:cacheprovider tests/test_honesty.py::test_spec_acceptance_criteria_are_numbered"
     evidence: [SPEC.md, receipt RCPT-0001 (sample scenario)]
     max_attempts: 3
-  - id: S2_CODE
-    mode: agentic
-    owners: [core-backend-subcoord, core-frontend-subcoord, core-api-builder, core-ui-builder, core-db-builder]
-    entry_gates:
-      - S1 exit receipt verifies PASS
-      - Each builder holds a disjoint file lease
-    exit_gates:
-      - No source file exceeds 400 lines
-      - AST zero-hardcoding gate is green
-      - All builders report done with commit SHAs
-    evidence: [commit SHAs per lease, lease ledger]
-    max_attempts: 3
-  - id: S3_TEST
-    mode: agentic
+  - id: S2_TESTS
+    title: Tests
+    execution: agentic
     owners: [core-qa-release-subcoord, core-tester]
+    human_gate: none
+    entry_gates:
+      - S1 exit receipt verifies PASS (spec approved by a human)
+    exit_gates:
+      - Every acceptance criterion in SPEC.md names tests that exist (checked by tests/test_honesty.py)
+      - Tests cover happy paths, edge cases, and chaos (fail-closed) behavior
+    exit_gate: "python -m pytest -q -p no:cacheprovider tests/test_honesty.py::test_spec_acceptance_criteria_map_to_real_tests"
+    evidence: [test modules under tests/ with their commit SHA, receipt RCPT-0002 (sample scenario)]
+    max_attempts: 3
+  - id: S3_BUILD
+    title: Build
+    execution: agentic
+    owners: [core-backend-subcoord, core-frontend-subcoord, core-api-builder, core-ui-builder, core-db-builder]
+    human_gate: none
     entry_gates:
       - S2 exit receipt verifies PASS
+      - Each builder holds a disjoint file lease
     exit_gates:
-      - "pytest passes 100% (happy, edge, chaos): python -m pytest -q -p no:cacheprovider"
-      - Playwright sweep shows 0 console errors and 0 anomaly strings
-    evidence: [pytest summary line, qa/e2e_console.py receipt JSON and screenshots]
+      - pytest passes 100% (happy, edge, chaos)
+      - No source file exceeds 400 lines
+      - AST zero-hardcoding gate is green
+      - Builders report done with commit SHAs
+    exit_gate: "python -m pytest -q -p no:cacheprovider"
+    evidence: [pytest summary line, commit SHAs per lease, lease ledger]
     max_attempts: 3
-  - id: S4_REVIEW
-    mode: agentic
-    owners: [core-reviewer-gemini, core-reviewer-opus, core-reviewer-fable]
+  - id: S4_VERIFY_QA
+    title: Verify and QA
+    execution: agentic
+    owners: [core-reviewer-gemini, core-reviewer-opus, core-reviewer-fable, core-iap-security]
+    human_gate: none
     entry_gates:
-      - S3 evidence is attached to the task
+      - S3 exit receipt verifies PASS at the same commit
+      - No QA agent is a builder of the change
     exit_gates:
-      - 3 of 3 council approvals with reviewer different from builder
-      - No open blocking findings
-    evidence: [council review notes, council decision receipt]
+      - 3 of 3 council approvals (gemini, opus, fable) with no open blocking findings
+      - "Playwright sweep at 1440x900 and 390x844: 0 console errors, 0 anomaly strings, no horizontal overflow"
+      - "Security audit by core-iap-security: IAP only, no committed secrets, DP-001 guard active"
+    exit_gate: "python3 qa/e2e_console.py <base_url> <out_dir> <label>"
+    evidence: [council review notes and decision receipt, qa/e2e_console.py receipt JSON and screenshots, security audit notes]
     max_attempts: 3
   - id: S5_RELEASE_GATE
-    mode: deterministic
+    title: Release gate
+    execution: deterministic
     owners: [core-coordinator, core-iap-security]
-    command: python3 scripts/nightly_dream_evolver.py
+    human_gate: required
+    command: python3 scripts/s5_release_gate.py --commit <HEAD sha>
     entry_gates:
-      - S4 council decision is 3 of 3 approve
+      - S4 council decision is 3 of 3 PASS at the release commit
+      - Tracked files are clean at the release commit
     exit_gates:
+      - "Cloud Build is SUCCESS: guard-substitutions, unit-tests, docker-build, container-smoke, docker-push, release-packet"
+      - Release packet pins the commit and the image @sha256 digest
       - DP-001 guard policy is active and its shadow replay gate is PASS
       - Audit receipt chain verifies PASS (POST /api/receipts/verify)
       - Human release approval is captured as a signed receipt
-    evidence: [release gate receipt, dreamstore/scorecard.json]
-    max_attempts: 1
+    exit_gate: python3 scripts/nightly_dream_evolver.py --out-root <scratch_dir>
+    on_failure:
+      - The failed Cloud Build step selects the bounce_to stage (Mode 2)
+      - Every later stage is blocked again until the reopened stage passes
+    bounce_to:
+      guard-substitutions: S4_VERIFY_QA
+      unit-tests: S3_BUILD
+      docker-build: S3_BUILD
+      container-smoke: S4_VERIFY_QA
+      docker-push: S3_BUILD
+      release-packet: S4_VERIFY_QA
+    ci:
+      provider: Cloud Build
+      config: cloudbuild.yaml
+      submit: gcloud builds submit --config=cloudbuild.yaml
+      image_repository: us-central1-docker.pkg.dev/gement02/osprey-scion/osprey-core
+      image_tag: $SHORT_SHA
+      steps: [guard-substitutions, unit-tests, docker-build, container-smoke, docker-push, release-packet]
+      packet: .workflow/evidence/s5_release_packet.json
+    evidence: [.workflow/evidence/s5_release_packet.json, Cloud Build build id and step results, dreamstore/scorecard.json]
+    max_attempts: 3
   - id: S6_DEPLOY_CLOSE
-    mode: deterministic
+    title: Deploy and close
+    execution: deterministic
     owners: [core-deployer]
-    command: gcloud run deploy osprey-core --source . --region us-central1 --iap --no-allow-unauthenticated --set-secrets AUDIT_HMAC_KEY=<secret>:latest
-    rollback_command: python3 scripts/s6_rollback.py --execute
+    human_gate: none
+    command: python3 scripts/s6_deploy.py --packet .workflow/evidence/s5_release_packet.json
     entry_gates:
-      - S5 receipt verifies PASS
+      - S5 release packet pins the commit and the image @sha256 digest
+      - Human release approval receipt verifies PASS
       - WORKFLOW_STAGE=S6_DEPLOY_CLOSE is set for the guard
     exit_gates:
-      - New revision serves 100% of traffic behind IAP
-      - Unauthenticated GET returns 302 or 401
-      - scripts/s6_rollback.py dry-run finds a previous revision
-    evidence: [serving revision name (K_REVISION), qa/smoke_endpoints.py result JSON, scripts/s6_rollback.py dry-run JSON]
-    max_attempts: 1
+      - Cloud Deploy rollout to osprey-core-prod SUCCEEDED and the new revision serves 100% of traffic
+      - Unauthenticated GET returns 302 or 401; IAP-authenticated GET returns 200
+      - GET /api/pipeline provenance matches the packet and the deploy report
+      - IAP, ingress all, min and max 1 instance, the runtime service account, and the osprey-onboard-sa bindings are preserved
+    exit_gate: python3 scripts/s6_exit.py --packet .workflow/evidence/s5_release_packet.json --report .workflow/evidence/s6_deploy_report.json
+    rollback_command: python3 scripts/s6_rollback.py --execute
+    on_failure:
+      - Run rollback_command (gcloud deploy targets rollback, then a traffic fallback)
+      - Re-run exit_gate against the restored revision
+      - Bounce to S3_BUILD with the probe report (Mode 2)
+    bounce_to: S3_BUILD
+    cd:
+      provider: Google Cloud Deploy
+      config: clouddeploy.yaml
+      skaffold: skaffold.yaml
+      service_manifest: run-service.yaml
+      pipeline: osprey-core-cd
+      target: osprey-core-prod
+      register: gcloud deploy apply --file=clouddeploy.yaml --region=us-central1 --project=gement02
+      release: gcloud deploy releases create (run by scripts/s6_deploy.py with the packet image @sha256)
+      rollback: gcloud deploy targets rollback (run by scripts/s6_rollback.py --execute)
+      runtime: Cloud Run us-central1 behind IAP, ingress all, min 1 and max 1 instance
+      runtime_service_account: osprey-core-run
+      execution_service_account: osprey-onboard-sa
+      report: .workflow/evidence/s6_deploy_report.json
+    evidence: [.workflow/evidence/s6_deploy_report.json, serving revision name (K_REVISION), scripts/s6_exit.py probe result]
+    max_attempts: 3

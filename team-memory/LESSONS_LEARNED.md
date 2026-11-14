@@ -24,3 +24,6 @@ incident; keep each lesson testable.
 - Every file path named in a config or doc must exist; a test resolves them so evidence cannot point at nothing.
 - Cloud Run's front end reserves some URL paths ending in z (such as `/healthz`); expose `/health` and `/ready` for checks through the service URL.
 - Normalize commands before matching guard rules: split flags (`-r -f`) and relative targets (`../..`, `./*`) are the same risk as their canonical forms.
+- Gate CI/CD on the workflow stage like any release command: Cloud Build only from S5, Cloud Deploy only at S6, and a wrapper script is gated by the action flag that makes it act (`--commit`, `--packet`, `--execute`).
+- Bounce a failed deterministic check to the stage that owns the fix (a failed unit-tests step goes back to S3_BUILD, a failed smoke check to S4_VERIFY_QA); never let the deterministic stage patch code itself.
+- Deploy the immutable `@sha256` digest from the release packet, never a mutable tag, so the probe, the rollback, and the provenance all name the same image.

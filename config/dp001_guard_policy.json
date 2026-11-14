@@ -1,13 +1,13 @@
 {
   "policy_id": "ops-release-guardrails",
-  "description": "PreToolUse guard policy enforced by dreamstore/hooks/dp001_pre_tool_guard.py. Versions are immutable; promotion = changing active_version in a reviewed commit.",
+  "description": "PreToolUse guard policy enforced by dreamstore/hooks/dp001_pre_tool_guard.py. Each version is reviewed as a whole; promotion = changing active_version in a reviewed commit, and a pinned file hash in tests/test_guard_normalize.py makes every policy edit deliberate.",
   "active_version": "1.1.0",
   "baseline_version": "1.0.0",
   "candidate_version": "1.1.0",
   "default_decision": "allow",
   "stage_env_var": "WORKFLOW_STAGE",
   "version_env_var": "DP001_POLICY_VERSION",
-  "stage_order": ["S1_SPEC", "S2_CODE", "S3_TEST", "S4_REVIEW", "S5_RELEASE_GATE", "S6_DEPLOY_CLOSE"],
+  "stage_order": ["S1_SPEC", "S2_TESTS", "S3_BUILD", "S4_VERIFY_QA", "S5_RELEASE_GATE", "S6_DEPLOY_CLOSE"],
   "io": {
     "max_stdin_bytes": 262144,
     "read_chunk_bytes": 65536,
@@ -106,7 +106,7 @@
     },
     "1.1.0": {
       "released": "2026-11-14",
-      "summary": "DP-001: narrow rm -rf to root/home/repo targets, gate Cloud Run releases on IAP and S5, protect computed dream artifacts.",
+      "summary": "DP-001: narrow rm -rf to root/home/repo targets, gate Cloud Run releases on IAP and S5, gate Cloud Build CI on S5 and Cloud Deploy CD on S6, protect computed dream artifacts.",
       "rules": [
         {
           "id": "R-GIT-FORCE-PUSH-MAIN",
@@ -175,6 +175,30 @@
             "\\bs6_rollback\\.py\\b[^;&|\\n]*--execute\\b"
           ],
           "reason": "Release commands (S6) run only after the S5_RELEASE_GATE receipt exists."
+        },
+        {
+          "id": "R-CI-BEFORE-RELEASE-GATE",
+          "kind": "stage_gate",
+          "tool_class": "shell",
+          "min_stage": "S5_RELEASE_GATE",
+          "patterns": [
+            "\\bgcloud\\b[^;&|\\n]*\\bbuilds\\s+submit\\b",
+            "\\bs5_release_gate\\.py\\b[^;&|\\n]*--commit\\b",
+            "\\bworkflow_ctl\\.py\\b[^;&|\\n]*\\brelease\\b"
+          ],
+          "reason": "Cloud Build CI (gcloud builds submit) runs only from S5_RELEASE_GATE, through scripts/s5_release_gate.py or scripts/workflow_ctl.py release."
+        },
+        {
+          "id": "R-CD-BEFORE-DEPLOY-CLOSE",
+          "kind": "stage_gate",
+          "tool_class": "shell",
+          "min_stage": "S6_DEPLOY_CLOSE",
+          "patterns": [
+            "\\bgcloud\\b[^;&|\\n]*\\bdeploy\\s+(?:releases\\s+create|apply|targets\\s+rollback)\\b",
+            "\\bs6_deploy\\.py\\b[^;&|\\n]*--packet\\b",
+            "\\bs6_rollback\\.py\\b[^;&|\\n]*--execute\\b"
+          ],
+          "reason": "Google Cloud Deploy commands (gcloud deploy releases create, apply, targets rollback) run only at S6_DEPLOY_CLOSE, from the S5 release packet."
         },
         {
           "id": "R-KUBECTL-DELETE-NS",
