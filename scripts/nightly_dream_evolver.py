@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Night Dreaming evolver for DP-001 (`ops-release-guardrails` v1.0.0 -> v1.1.0).
 
-Replays the recorded, labelled tool calls in dreamstore/evals/ through the real DP-001
-`evaluate()` under the baseline and candidate policy versions, then writes (atomically):
+Replays the curated, labelled scenario traces in dreamstore/evals/ (modelled on common release
+failure modes, not recorded from live sessions) through the real DP-001 `evaluate()` under the
+baseline and candidate policy versions, then writes (atomically):
   dreamstore/scorecard.json                        computed scorecard with per-case results
   dreamstore/proposals/DP-001.json                 proposal, rule diff, derived lifecycle status
   team-memory/dreams/<date>-nightly-dream-synthesis.md   only with --write
@@ -30,7 +31,7 @@ from dreamstore.replay import ReplayError, run_shadow_replay  # noqa: E402
 
 EXIT_OK = 0
 EXIT_FAIL = 1
-METHOD = "shadow replay of recorded PreToolUse events through dreamstore.hooks.dp001_policy.evaluate"
+METHOD = "shadow replay of curated scenario traces (PreToolUse events) through dreamstore.hooks.dp001_policy.evaluate"
 
 
 def write_json(path: Path, doc: Any) -> None:
@@ -57,6 +58,7 @@ def build_scorecard(report: Mapping[str, Any], trace_id: str, generated_at: str,
         "proposal_id": report["proposal_id"],
         "skill": report["skill"],
         "eval_set_id": report["eval_set_id"],
+        "eval_source_label": report["eval_source_label"],
         "method": METHOD,
         "baseline": report["baseline"],
         "candidate": report["candidate"],
@@ -99,12 +101,13 @@ def _case_line(case: Mapping[str, Any]) -> str:
 def render_synthesis(proposal_cfg: Mapping[str, Any], report: Mapping[str, Any], day: date, generated_at: str) -> str:
     diff = report["rule_diff"]
     header = [
-        f"# Nightly dream synthesis {day.isoformat()}",
+        f"# Night Dreaming synthesis {day.isoformat()}",
         "",
         f"- Proposal: {proposal_cfg['id']} {proposal_cfg['title']}",
         f"- Skill: {proposal_cfg['skill']} v{proposal_cfg['from_version']} to v{proposal_cfg['to_version']}",
         f"- Method: {METHOD}",
-        f"- Generated: {generated_at}",
+        f"- Evidence basis: {proposal_cfg['evidence_basis']}",
+        f"- Generated: {generated_at} by scripts/nightly_dream_evolver.py --write",
     ]
     scorecard = [_side_line("Baseline", report["baseline"]), _side_line("Candidate", report["candidate"]),
                  f"- Gate: {report['gate']['verdict']}; proposal status: {report['status']}"]

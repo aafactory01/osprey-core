@@ -1,6 +1,7 @@
-"""Night Dreaming shadow replay: grade guard policy versions on recorded, labelled tool calls.
+"""Night Dreaming shadow replay: grade guard policy versions on curated, labelled scenario traces.
 
-The scorecard is computed, never asserted: every case is re-evaluated with the real DP-001
+The scorecard is computed, never asserted: every curated case (dreamstore/evals/, modelled on common
+release failure modes, not recorded from live sessions) is re-evaluated with the real DP-001
 `evaluate()` under the baseline and the candidate policy versions, and the pass rates, false
 allows (missed blocks), and false blocks (needless friction) are counted from those decisions.
 """
@@ -92,7 +93,7 @@ def proposal_status(policy_doc: Mapping[str, Any], candidate_version: str, verdi
 
 
 def run_shadow_replay(policy_doc: Mapping[str, Any], eval_doc: Mapping[str, Any], dreaming: Mapping[str, Any]) -> dict[str, Any]:
-    """Replay every recorded case under baseline and candidate; return the computed scorecard."""
+    """Replay every curated case under baseline and candidate; return the computed scorecard."""
     started = time.perf_counter()
     validate_policy_document(policy_doc)
     cases_in = validate_eval_set(eval_doc)
@@ -122,6 +123,7 @@ def run_shadow_replay(policy_doc: Mapping[str, Any], eval_doc: Mapping[str, Any]
         "proposal_id": proposal["id"],
         "skill": proposal["skill"],
         "eval_set_id": eval_doc.get("eval_set_id"),
+        "eval_source_label": eval_doc.get("source_label"),
         "baseline": baseline,
         "candidate": candidate,
         "gate": gate,

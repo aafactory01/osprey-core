@@ -44,8 +44,12 @@ def healthz() -> Response:
 
 
 @core_bp.get("/readyz")
+@core_bp.get("/ready")
 def readyz() -> tuple[Response, int]:
-    """Readiness: every config file validates. Reports audit key presence as a boolean only."""
+    """Readiness (/readyz, alias /ready for Cloud Run URLs): every config file validates.
+
+    Reports audit key presence as a boolean only.
+    """
     report = store().check_all()
     ready = all(entry["ok"] for entry in report.values())
     body = {"ready": ready, "config": report, "audit_key_configured": _audit_key_configured(store())}
@@ -80,7 +84,8 @@ def rollouts() -> Response:
     if active_total != cfg["traffic_total_percent"]:
         detail = f"active rollouts carry {active_total}% of traffic, expected {cfg['traffic_total_percent']}%"
         raise ConfigError(CONFIG_SCHEMA, "config/rollouts.json", detail)
-    return jsonify({"source_label": cfg["source_label"], "traffic_total_percent": cfg["traffic_total_percent"],
+    return jsonify({"source_label": cfg["source_label"], "scenario": cfg["scenario"],
+                    "traffic_total_percent": cfg["traffic_total_percent"],
                     "active_traffic_percent": active_total, "rollouts": cfg["rollouts"]})
 
 

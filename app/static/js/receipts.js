@@ -1,6 +1,6 @@
 // Audit Receipts tab: chained HMAC receipts, per-receipt verify, tamper demo, and full-chain verify.
 import { api } from './api.js';
-import { badge, clear, el, facts, section, stateBadge, table, text, utcTime, verdictBadge } from './dom.js';
+import { badge, clear, el, facts, section, sourceNotice, stateBadge, table, text, utcTime, verdictBadge } from './dom.js';
 
 let chain = null;
 
@@ -82,6 +82,7 @@ export async function loadReceipts(container, chainButton) {
   const chainResult = el('output', { id: 'chain-result', 'aria-live': 'polite' }, [stateBadge(data.chain_valid ? 'PASS' : 'FAIL'),
     el('b', { class: 'small muted', text: ' chain status reported by the server' })]);
   clear(container).append(
+    sourceNotice(data.source_label, 'receipts'),
     section('Signing key and format', 'key', [facts([
       ['Algorithm', badge(data.algorithm, 'info')],
       ['Key id (fingerprint)', el('code', { id: 'receipts-key-id', text: data.key_id })],

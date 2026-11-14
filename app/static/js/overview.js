@@ -1,7 +1,7 @@
 // Overview tab: SLA/SLO health from live telemetry, rollout ledger, and recent request telemetry.
 import { api } from './api.js';
 import {
-  badge, clear, el, failure, loading, percent, ratio, section, shortText, stateBadge, table, text, uiSetting, utcTime,
+  badge, clear, el, failure, loading, percent, ratio, section, shortText, sourceNotice, stateBadge, table, text, uiSetting, utcTime,
 } from './dom.js';
 
 function sloCard(slo) {
@@ -60,7 +60,8 @@ function rolloutsView(data) {
     { key: 'started', label: 'Started' }, { key: 'gate', label: 'Health gate' },
   ];
   return section('Rollouts', 'flow', [
-    el('p', { class: 'small muted', text: `${data.source_label}; active traffic ${data.active_traffic_percent}%` }),
+    sourceNotice(data.source_label, 'rollouts'),
+    el('p', { class: 'small muted', text: `Active traffic in this ${data.scenario} ledger: ${data.active_traffic_percent}%` }),
     table(columns, rows),
   ]);
 }

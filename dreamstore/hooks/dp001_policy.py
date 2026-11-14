@@ -2,7 +2,7 @@
 
 `evaluate(event, policy)` is the single decision function shared by the PreToolUse hook
 (dreamstore/hooks/dp001_pre_tool_guard.py), the shadow replay (dreamstore/replay.py), and the API.
-It performs no I/O and reads no clock, so replaying recorded traces is deterministic.
+It performs no I/O and reads no clock, so replaying curated scenario traces is deterministic.
 """
 
 from __future__ import annotations
@@ -12,6 +12,11 @@ import re
 from dataclasses import asdict, dataclass
 from fnmatch import fnmatchcase
 from typing import Any, Mapping
+
+if __package__:
+    from dreamstore.hooks.dp001_normalize import normalize_shell
+else:  # imported as a sibling module when the hook runs as a script
+    from dp001_normalize import normalize_shell  # type: ignore[no-redef]
 
 ALLOW = "allow"
 BLOCK = "block"
@@ -187,12 +192,13 @@ def _tool_class(tool_name: str, classes: Mapping[str, Any]) -> str | None:
     return None
 
 
-def _subject(tool_class: str, tool_input: Mapping[str, Any], input_keys: list[str]) -> _Subject | None:
+def _subject(tool_class: str, tool_input: Mapping[str, Any], input_keys: list[str], cwd: Any = None) -> _Subject | None:
     for key in input_keys:
         value = tool_input.get(key)
         if isinstance(value, str) and value.strip():
-            paths = _path_candidates(value) if tool_class == FILE_WRITE else ()
-            return _Subject(text=value, paths=paths)
+            if tool_class == FILE_WRITE:
+                return _Subject(text=value, paths=_path_candidates(value))
+            return _Subject(text=normalize_shell(value, cwd), paths=())
     return None
 
 
@@ -245,7 +251,7 @@ def _evaluate(event: Any, policy: Mapping[str, Any], version: str) -> Decision:
     tool_class = _tool_class(tool_name, policy["tool_classes"])
     if tool_class is None:
         return _no_match(policy, version, "ALLOW_UNGUARDED_TOOL", f"{tool_name} is neither a shell nor a file-write tool")
-    subject = _subject(tool_class, tool_input, policy["tool_classes"][tool_class]["input_keys"])
+    subject = _subject(tool_class, tool_input, policy["tool_classes"][tool_class]["input_keys"], event.get("cwd"))
     if subject is None:
         return Decision(BLOCK, "FAIL_CLOSED_MISSING_INPUT", f"{tool_name} input has no non-empty command or path", version)
     for rule in policy["rules"]:

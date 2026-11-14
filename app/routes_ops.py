@@ -36,6 +36,7 @@ def task_backends() -> Response:
         "backends": registry.describe_all(),
         "default_backend": registry.default_backend,
         "selected": backends().selector().selected(registry),
+        "source_label": store().get("task_backends")["source_label"],
     })
 
 
@@ -79,7 +80,7 @@ def _nightly(config_store: ConfigStore, dreaming: dict[str, Any], report: dict[s
     try:
         doc = json.loads((config_store.root / relpath).read_text(encoding="utf-8"))
     except FileNotFoundError:
-        return {"present": False, "file": relpath, "detail": "no nightly run recorded yet"}
+        return {"present": False, "file": relpath, "detail": "no evolver run has written a scorecard yet"}
     except (OSError, ValueError) as exc:
         return {"present": True, "valid": False, "file": relpath, "detail": f"unreadable: {type(exc).__name__}"}
     try:

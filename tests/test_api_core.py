@@ -37,6 +37,13 @@ def test_health_alias_matches_healthz(client):
     assert client.get("/health").get_json() == client.get("/healthz").get_json()
 
 
+def test_ready_alias_matches_readyz(client):
+    ready, readyz = client.get("/ready"), client.get("/readyz")
+    assert ready.status_code == readyz.status_code == 200
+    assert ready.get_json() == readyz.get_json()
+    assert ready.headers["Cache-Control"] == "no-store"
+
+
 def test_readyz_ready_with_audit_key(client):
     resp = client.get("/readyz")
     body = resp.get_json()

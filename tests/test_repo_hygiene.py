@@ -124,6 +124,12 @@ def test_css_defines_both_themes_and_hides_nothing_essential():
     assert "--bg: #f8fafc" in css and '[data-theme="dark"]' in css and "--bg: #0c0e14" in css
 
 
+def test_mobile_table_captions_fill_full_width():
+    css = (REPO_ROOT / "app" / "static" / "css" / "style.css").read_text()
+    mobile = css.split("@media (max-width: 720px)", 1)[1].split("@media", 1)[0]
+    assert ".table caption { display: block; width: 100%; }" in mobile
+
+
 def test_workflow_yaml_matches_config():
     yml = yaml.safe_load((REPO_ROOT / ".workflow" / "workflow.yaml").read_text())
     cfg = json.loads((REPO_ROOT / "config" / "workflow_stages.json").read_text())

@@ -1,5 +1,7 @@
 {
   "chain_id": "osprey-core-release-2026-11",
+  "scenario": "sample",
+  "source_label": "Sample release scenario (config/audit_receipts.json): illustrative events signed live with AUDIT_HMAC_KEY; not a record of real gate decisions.",
   "algorithm": "HMAC-SHA256",
   "canonicalization": "JSON with sorted keys, compact separators, UTF-8",
   "key_env_var": "AUDIT_HMAC_KEY",
@@ -14,6 +16,6 @@
     {"id": "RCPT-0004", "stage": "S3_TEST", "event": "gate_decision", "gate": "S3 exit", "decision": "BLOCK", "actor": "core-tester", "timestamp": "2026-11-13T15:31:48Z", "evidence": "Two chaos tests failed: config file removed mid-run returned stale data"},
     {"id": "RCPT-0005", "stage": "S3_TEST", "event": "gate_decision", "gate": "S3 exit", "decision": "PASS", "actor": "core-tester", "timestamp": "2026-11-13T17:05:36Z", "evidence": "pytest green after the fail-closed config fix"},
     {"id": "RCPT-0006", "stage": "S4_REVIEW", "event": "stage_transition", "gate": "S4 entry", "decision": "PASS", "actor": "core-qa-release-subcoord", "timestamp": "2026-11-14T08:15:00Z", "evidence": "Council convened: gemini, opus, fable"},
-    {"id": "RCPT-0007", "stage": "S4_REVIEW", "event": "gate_decision", "gate": "DP-001 shadow replay", "decision": "PASS", "actor": "scripts/nightly_dream_evolver.py", "timestamp": "2026-11-14T10:02:44Z", "evidence": "ops-release-guardrails 60% baseline to 100% candidate on 10 recorded cases"}
+    {"id": "RCPT-0007", "stage": "S4_REVIEW", "event": "gate_decision", "gate": "DP-001 shadow replay", "decision": "PASS", "actor": "scripts/nightly_dream_evolver.py", "timestamp": "2026-11-14T10:02:44Z", "evidence": "ops-release-guardrails 60% baseline to 100% candidate on 10 curated cases"}
   ]
 }

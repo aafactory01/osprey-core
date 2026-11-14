@@ -2,6 +2,7 @@
 # Agentic stages (S1-S4): agents plan and execute; gates check evidence before a stage closes.
 # Deterministic stages (S5-S6): fixed scripts only; the DP-001 guard blocks S6 commands before S5.
 # The console serves the same stages from config/workflow_stages.json (tests keep both in sync).
+# Stage progress shown in the console is a labelled sample scenario, not live workflow state.
 name: hybrid
 version: "2.0.0"
 guard:
@@ -21,8 +22,8 @@ stages:
       - No open S1 task exists for the same goal
     exit_gates:
       - SPEC.md lists acceptance criteria and a test plan
-      - core-coordinator approval is recorded as a signed receipt
-    evidence: [SPEC.md, receipt RCPT-0001]
+      - core-coordinator approval is captured as a signed receipt
+    evidence: [SPEC.md, receipt RCPT-0001 (sample scenario)]
     max_attempts: 3
   - id: S2_CODE
     mode: agentic
@@ -44,7 +45,7 @@ stages:
     exit_gates:
       - "pytest passes 100% (happy, edge, chaos): python -m pytest -q -p no:cacheprovider"
       - Playwright sweep shows 0 console errors and 0 anomaly strings
-    evidence: [pytest summary line, Playwright receipt JSON and screenshots]
+    evidence: [pytest summary line, qa/e2e_console.py receipt JSON and screenshots]
     max_attempts: 3
   - id: S4_REVIEW
     mode: agentic
@@ -65,7 +66,7 @@ stages:
     exit_gates:
       - DP-001 guard policy is active and its shadow replay gate is PASS
       - Audit receipt chain verifies PASS (POST /api/receipts/verify)
-      - Human release approval is recorded
+      - Human release approval is captured as a signed receipt
     evidence: [release gate receipt, dreamstore/scorecard.json]
     max_attempts: 1
   - id: S6_DEPLOY_CLOSE
@@ -80,5 +81,5 @@ stages:
       - New revision serves 100% of traffic behind IAP
       - Unauthenticated GET returns 302 or 401
       - scripts/s6_rollback.py dry-run finds a previous revision
-    evidence: [serving revision name, smoke-test log, rollback dry-run JSON]
+    evidence: [serving revision name (K_REVISION), qa/smoke_endpoints.py result JSON, scripts/s6_rollback.py dry-run JSON]
     max_attempts: 1

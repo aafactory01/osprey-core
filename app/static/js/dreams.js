@@ -1,7 +1,9 @@
 // Night Dreaming tab + DP-001 drawer: proposal, computed scorecard, per-case replay rows, and re-run.
 import { api } from './api.js';
 import { openDrawer } from './drawer.js';
-import { badge, bulletList, clear, el, facts, failure, icon, section, shortText, stateBadge, table, text, utcTime, verdictBadge } from './dom.js';
+import {
+  badge, bulletList, clear, el, facts, failure, icon, section, shortText, sourceNotice, stateBadge, table, text, utcTime, verdictBadge,
+} from './dom.js';
 
 let latest = null;
 
@@ -36,7 +38,7 @@ function decisionCell(side) {
 
 function casesTable(replay) {
   const columns = [
-    { key: 'id', label: 'Case' }, { key: 'title', label: 'Recorded tool call' }, { key: 'stage', label: 'Stage' },
+    { key: 'id', label: 'Case' }, { key: 'title', label: 'Curated scenario trace' }, { key: 'stage', label: 'Stage' },
     { key: 'expected', label: 'Expected' }, { key: 'baseline', label: `Baseline v${replay.baseline.version}` },
     { key: 'candidate', label: `Candidate v${replay.candidate.version}` },
   ];
@@ -51,7 +53,7 @@ function casesTable(replay) {
       candidate: decisionCell(item.candidate),
     },
   }));
-  return section('Per-case shadow replay', 'play', [table(columns, rows, `${replay.cases.length} recorded cases from ${text(replay.eval_set_id)}`)]);
+  return section('Per-case shadow replay', 'play', [table(columns, rows, `${replay.cases.length} curated cases from ${text(replay.eval_set_id)}`)]);
 }
 
 function ruleDiff(diff) {
@@ -60,16 +62,17 @@ function ruleDiff(diff) {
 }
 
 function nightlyLine(nightly) {
-  if (!nightly.present) return `Nightly scorecard: ${nightly.detail}.`;
-  if (!nightly.valid) return `Nightly scorecard ${nightly.file} is invalid: ${nightly.detail}.`;
+  if (!nightly.present) return `Evolver scorecard: ${nightly.detail}.`;
+  if (!nightly.valid) return `Evolver scorecard ${nightly.file} is invalid: ${nightly.detail}.`;
   const agreement = nightly.consistent_with_live ? 'matches the live replay' : 'DIFFERS from the live replay';
-  return `Nightly run ${utcTime(nightly.generated_at)} (${nightly.file}) ${agreement}.`;
+  return `Last evolver run ${utcTime(nightly.generated_at)} (${nightly.file}) ${agreement}.`;
 }
 
 function renderDrawer(dialog, payload) {
   const { proposal, replay } = payload;
   dialog.querySelector('#dream-drawer-title').textContent = `${proposal.id}: ${proposal.title}`;
   clear(dialog.querySelector('#dream-drawer-body')).append(
+    sourceNotice(replay.eval_source_label, 'dreams-drawer'),
     section('Proposal', 'dream', [
       facts([
         ['Skill', el('div', {}, [el('code', { text: proposal.skill }), ' ', versions(proposal)])],
@@ -77,9 +80,10 @@ function renderDrawer(dialog, payload) {
         ['Active policy version', el('code', { text: replay.active_version })],
         ['Guard hook', el('code', { text: proposal.hook })],
         ['Policy file', el('code', { text: proposal.policy_file })],
+        ['Evidence basis', proposal.evidence_basis],
         ['Human gate', proposal.human_gate],
       ]),
-      el('h3', { text: 'Why' }), bulletList(proposal.rationale),
+      el('h3', { text: 'Why (computed from the curated cases)' }), bulletList(proposal.rationale),
     ]),
     scorecard(replay, 'drawer'),
     section('Gate checks', 'check', [bulletList(replay.gate.checks.map((check) => el('div', { class: 'stage-row' },
@@ -98,7 +102,7 @@ function replayMeta(result) {
 
 function renderSummary(container, result) {
   const { proposal, replay } = result.data;
-  clear(container).append(el('div', { class: 'grid' }, [
+  clear(container).append(sourceNotice(replay.eval_source_label, 'dreams'), el('div', { class: 'grid' }, [
     el('article', { class: 'card', id: 'dream-summary' }, [
       el('div', { class: 'card-head' }, [el('h3', { text: `${proposal.id}: ${proposal.title}` }), stateBadge(replay.status)]),
       el('p', {}, [el('code', { text: proposal.skill }), ' ', versions(proposal)]),

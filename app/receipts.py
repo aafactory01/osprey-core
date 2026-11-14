@@ -1,6 +1,7 @@
 """HMAC-SHA256 audit receipts with a hash chain.
 
-Every recorded stage transition / gate decision in config/audit_receipts.json becomes a receipt body
+Every sample stage transition / gate decision in config/audit_receipts.json (an illustrative release
+scenario, labelled as such in the API and UI) becomes a receipt body
 that embeds `prev_signature` (the previous receipt's signature, or the configured genesis marker) and
 is signed over its canonical JSON with the key from AUDIT_HMAC_KEY. Tampering with any field breaks
 that receipt's signature; removing or reordering receipts breaks the chain links after it. Without a
@@ -59,7 +60,7 @@ def build_chain(cfg: Mapping[str, Any], key: bytes) -> list[dict[str, Any]]:
     prev = cfg["genesis_prev_signature"]
     chain: list[dict[str, Any]] = []
     for seq, event in enumerate(cfg["events"], start=1):
-        body = {**event, "chain_id": cfg["chain_id"], "seq": seq, "prev_signature": prev,
+        body = {**event, "chain_id": cfg["chain_id"], "scenario": cfg["scenario"], "seq": seq, "prev_signature": prev,
                 "key_id": key_id, "algorithm": cfg["algorithm"]}
         signature = sign(key, body)
         chain.append({"receipt": body, "signature": signature})
@@ -75,6 +76,8 @@ def describe_chain(cfg: Mapping[str, Any], key: bytes) -> dict[str, Any]:
               "short_prev_signature": str(item["receipt"]["prev_signature"])[:short]} for item in chain]
     return {
         "chain_id": cfg["chain_id"],
+        "scenario": cfg["scenario"],
+        "source_label": cfg["source_label"],
         "algorithm": cfg["algorithm"],
         "canonicalization": cfg["canonicalization"],
         "key_id": key_fingerprint(key, cfg["key_id_chars"]),

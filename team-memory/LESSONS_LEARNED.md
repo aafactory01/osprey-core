@@ -19,3 +19,8 @@ incident; keep each lesson testable.
 - Measure latency with `time.perf_counter()` and report integers; never display synthetic timings.
 - Render data with `textContent` only and show explicit loading and error states; never print raw objects or placeholder values.
 - One gunicorn worker with threads keeps per-process state (like the selected task backend) consistent on a single instance.
+- Label illustrative data where it is shown: sample scenarios, sample ledgers, and projections carry a `source_label` from config that the API returns and the UI renders; never present sample history as live state.
+- Describe provenance exactly: curated scenario traces are not recordings, and a manual evolver run is not a nightly run.
+- Every file path named in a config or doc must exist; a test resolves them so evidence cannot point at nothing.
+- Cloud Run's front end reserves some URL paths ending in z (such as `/healthz`); expose `/health` and `/ready` for checks through the service URL.
+- Normalize commands before matching guard rules: split flags (`-r -f`) and relative targets (`../..`, `./*`) are the same risk as their canonical forms.

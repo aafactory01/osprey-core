@@ -4,9 +4,9 @@
   "min_samples": 5,
   "sla": {
     "id": "console-availability",
-    "name": "Console availability (contract)",
+    "name": "Console availability target",
     "target": 0.999,
-    "window_label": "30-day rolling window"
+    "window_label": "30-day rolling target from config/health.json (not measured by this instance)"
   },
   "slos": [
     {

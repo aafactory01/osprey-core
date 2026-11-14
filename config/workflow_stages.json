@@ -2,6 +2,8 @@
   "workflow_id": "hybrid",
   "version": "2.0.0",
   "mode_label": "Hybrid",
+  "scenario": "sample",
+  "source_label": "Sample release scenario (config/workflow_stages.json): illustrative stage progress, not live workflow state.",
   "current_stage": "S4_REVIEW",
   "mode_descriptions": {
     "agentic": "Agents plan and execute; gates check evidence before the stage can close.",
@@ -15,8 +17,8 @@
       "owners": ["core-coordinator", "core-planner", "core-spec-writer"],
       "summary": "Turn the request into a testable spec linked to an outcome and goal.",
       "entry_gates": ["Request is linked to an Outcome and Goal in the task backend", "No open S1 task exists for the same goal"],
-      "exit_gates": ["SPEC.md lists acceptance criteria and a test plan", "core-coordinator approval is recorded as a signed receipt"],
-      "evidence": ["SPEC.md", "Receipt RCPT-0001"]
+      "exit_gates": ["SPEC.md lists acceptance criteria and a test plan", "core-coordinator approval is captured as a signed receipt"],
+      "evidence": ["SPEC.md", "Receipt RCPT-0001 (sample scenario)"]
     },
     {
       "id": "S2_CODE",
@@ -36,7 +38,7 @@
       "summary": "Prove the change with happy-path, edge-case, and chaos tests plus a browser sweep.",
       "entry_gates": ["S2 exit receipt verifies PASS"],
       "exit_gates": ["pytest passes 100% (happy, edge, chaos)", "Playwright sweep shows 0 console errors and 0 anomaly strings"],
-      "evidence": ["pytest summary line", "Playwright receipt JSON and screenshots"]
+      "evidence": ["pytest summary line", "qa/e2e_console.py receipt JSON and screenshots"]
     },
     {
       "id": "S4_REVIEW",
@@ -55,8 +57,8 @@
       "owners": ["core-coordinator", "core-iap-security"],
       "summary": "Fixed checks decide whether the release may ship.",
       "entry_gates": ["S4 council decision is 3 of 3 approve"],
-      "exit_gates": ["DP-001 guard policy is active and its shadow replay gate is PASS", "Audit receipt chain verifies PASS", "Human release approval is recorded"],
-      "evidence": ["Release gate receipt", "Shadow replay scorecard"]
+      "exit_gates": ["DP-001 guard policy is active and its shadow replay gate is PASS", "Audit receipt chain verifies PASS", "Human release approval is captured as a signed receipt"],
+      "evidence": ["Release gate receipt", "dreamstore/scorecard.json (computed by scripts/nightly_dream_evolver.py)"]
     },
     {
       "id": "S6_DEPLOY_CLOSE",
@@ -66,7 +68,7 @@
       "summary": "Ship behind IAP, smoke-test, and close the task with evidence.",
       "entry_gates": ["S5 receipt verifies PASS", "WORKFLOW_STAGE=S6_DEPLOY_CLOSE is set for the guard"],
       "exit_gates": ["New revision serves 100% of traffic behind IAP", "Unauthenticated GET returns 302 or 401", "scripts/s6_rollback.py dry-run finds a previous revision"],
-      "evidence": ["Serving revision name", "Smoke-test log", "Rollback dry-run JSON"]
+      "evidence": ["Serving revision name (K_REVISION)", "qa/smoke_endpoints.py result JSON", "scripts/s6_rollback.py dry-run JSON"]
     }
   ]
 }

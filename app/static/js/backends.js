@@ -1,6 +1,6 @@
 // Task Backend tab: radio-group selector; each choice is POSTed and the stage mapping re-rendered from the reply.
 import { api } from './api.js';
-import { badge, clear, el, failure, facts, section, shortText, table, text, utcTime } from './dom.js';
+import { badge, clear, el, failure, facts, section, shortText, sourceNotice, table, text, utcTime } from './dom.js';
 
 function mappingView(view, echo) {
   const backend = view.backend;
@@ -28,7 +28,8 @@ function mappingView(view, echo) {
     meta.push(['Echo', el('output', { id: 'backend-echo', text:
       `POST accepted at ${utcTime(echo.selected_at)}; round trip ${echo.clientMs} ms; trace ${shortText(echo.traceId, 'short_trace_chars')}` })]);
   }
-  return section(`${backend.display_name}: how S1 to S6 land`, 'stack', [
+  return section(`${backend.display_name}: how S1 to S6 would land`, 'stack', [
+    sourceNotice(view.source_label, 'task-backend'),
     el('p', { class: 'muted', text: backend.description }),
     facts(meta),
     table(columns, rows),

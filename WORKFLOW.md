@@ -6,6 +6,11 @@ scripts run, and no agent may improvise or skip a step. The machine-readable def
 `.workflow/workflow.yaml`; the console serves the same stages from `config/workflow_stages.json`
 (GET `/api/workflow`), and a test keeps the two in sync.
 
+> The stage progress and audit receipts shown in the console are a **labelled sample release
+> scenario** (`scenario: sample` plus a `source_label` in each config, returned by the API and shown
+> in the UI). They illustrate the workflow; they are not live workflow state. The acceptance
+> criteria for the console itself live in `SPEC.md`.
+
 ## Stages
 
 - **S1_SPEC** (agentic): core-coordinator, core-planner, core-spec-writer.
@@ -17,7 +22,7 @@ scripts run, and no agent may improvise or skip a step. The machine-readable def
 - **S4_REVIEW** (agentic): core-reviewer-gemini, core-reviewer-opus, core-reviewer-fable.
   - Exit: 3 of 3 council approvals; a reviewer never reviews their own code.
 - **S5_RELEASE_GATE** (deterministic): core-coordinator, core-iap-security.
-  - Exit: DP-001 replay gate PASS; receipt chain verifies PASS; human approval recorded.
+  - Exit: DP-001 replay gate PASS; receipt chain verifies PASS; human approval captured as a signed receipt.
 - **S6_DEPLOY_CLOSE** (deterministic): core-deployer.
   - Exit: new revision serves 100% behind IAP; unauthenticated GET is 302 or 401; rollback dry-run green.
 
@@ -28,8 +33,10 @@ scripts run, and no agent may improvise or skip a step. The machine-readable def
   from `AUDIT_HMAC_KEY`; without it the receipts API answers 503 instead of inventing signatures.
 - **Task backend.** Stages map to native tasks in the selected backend (farmtable, github, jira,
   gitlab, beads, linear) through `.workflow/task_backend.py` and `config/task_backends.json`.
-- **Night Dreaming.** `scripts/nightly_dream_evolver.py` replays recorded tool calls through the
-  DP-001 guard under the baseline and candidate policy versions and writes the computed scorecard.
+- **Night Dreaming.** `scripts/nightly_dream_evolver.py` replays curated scenario traces
+  (`dreamstore/evals/ops_release_guardrails_shadow_replay.json`, modelled on common release failure
+  modes, not recorded from live sessions) through the DP-001 guard under the baseline and candidate
+  policy versions and writes the computed scorecard.
 
 ## DP-001 PreToolUse guard
 
@@ -56,3 +63,7 @@ Gemini CLI (`.gemini/settings.json`):
 - S5: `python3 scripts/nightly_dream_evolver.py --write` (exit 1 if the candidate scores below the baseline).
 - S6 deploy: `WORKFLOW_STAGE=S6_DEPLOY_CLOSE gcloud run deploy osprey-core --source . --region us-central1 --iap --no-allow-unauthenticated --set-secrets AUDIT_HMAC_KEY=<secret>:latest`
 - S6 rollback: `python3 scripts/s6_rollback.py --project <project>` (dry-run), then `--execute`.
+- S6 checks: Cloud Run's front end reserves some URL paths ending in `z` (for example `/healthz`), so
+  checks through the service URL and Cloud Run probes use `/health` (liveness) and `/ready`
+  (readiness; `/readyz` is the same handler). `/healthz` stays for container-local checks such as the
+  Docker HEALTHCHECK. Smoke every endpoint with `python3 qa/smoke_endpoints.py <url> <result-file>`.

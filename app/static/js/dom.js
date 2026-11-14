@@ -121,3 +121,8 @@ export function table(columns, rows, caption) {
 export function section(title, iconName, children) {
   return el('section', { class: 'card' }, [el('h3', { class: 'section-title' }, [icon(iconName), title]), ...children]);
 }
+
+// Provenance notice: illustrative or projected data always says so, in plain view.
+export function sourceNotice(label, kind) {
+  return el('p', { class: 'notice', role: 'note', 'data-source-label': kind }, [icon('info'), el('b', { text: label })]);
+}

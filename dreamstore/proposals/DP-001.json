@@ -1,5 +1,6 @@
 {
   "active_version": "1.1.0",
+  "evidence_basis": "Curated scenario traces (dreamstore/evals/ops_release_guardrails_shadow_replay.json) modelled on common release failure modes; not recorded from live sessions.",
   "from_version": "1.0.0",
   "gate": {
     "checks": [
@@ -16,16 +17,16 @@
     ],
     "verdict": "PASS"
   },
-  "generated_at": "2026-11-14T19:35:29Z",
+  "generated_at": "2026-11-14T20:08:27Z",
   "hook": "dreamstore/hooks/dp001_pre_tool_guard.py",
   "human_gate": "Promote by setting active_version in config/dp001_guard_policy.json through a reviewed commit.",
   "id": "DP-001",
   "policy_file": "config/dp001_guard_policy.json",
   "rationale": [
-    "Recorded S6 sessions deployed the console with --allow-unauthenticated and nothing stopped them.",
-    "A deploy was attempted in S3 before the release gate existed.",
-    "An agent hand-wrote dreamstore/scorecard.json instead of running the replay.",
-    "The v1.0.0 rm -rf rule blocked routine build cleanup and trained agents to work around the guard."
+    "SR-03: v1.0.0 allows a public deploy (--allow-unauthenticated) during S6.",
+    "SR-09: v1.0.0 allows a Cloud Run deploy during S3, before the release gate.",
+    "SR-08: v1.0.0 lets an agent hand-write dreamstore/scorecard.json instead of running the replay.",
+    "SR-05: v1.0.0 blocks routine build cleanup (rm -rf ./dist), which pushes agents to work around the guard."
   ],
   "rule_diff": {
     "added": [

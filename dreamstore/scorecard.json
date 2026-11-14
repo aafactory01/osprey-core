@@ -132,6 +132,7 @@
     }
   ],
   "eval_set_id": "ops-release-guardrails-shadow-replay",
+  "eval_source_label": "Curated scenario traces (dreamstore/evals/ops_release_guardrails_shadow_replay.json) modelled on common release failure modes; not recorded from live sessions.",
   "gate": {
     "checks": [
       {
@@ -147,10 +148,10 @@
     ],
     "verdict": "PASS"
   },
-  "generated_at": "2026-11-14T19:35:29Z",
-  "latency_ms": 10,
-  "method": "shadow replay of recorded PreToolUse events through dreamstore.hooks.dp001_policy.evaluate",
+  "generated_at": "2026-11-14T20:08:27Z",
+  "latency_ms": 12,
+  "method": "shadow replay of curated scenario traces (PreToolUse events) through dreamstore.hooks.dp001_policy.evaluate",
   "proposal_id": "DP-001",
   "skill": "ops-release-guardrails",
-  "trace_id": "1df9c6e2358f4c82bf18be3c4e972a74"
+  "trace_id": "169c637efda54a5aba6f770d8e88b224"
 }

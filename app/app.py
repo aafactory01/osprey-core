@@ -24,7 +24,7 @@ CONTENT_SECURITY_POLICY = (
     "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; "
     "font-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
 )
-NO_STORE_PREFIXES = ("/api/", "/health", "/readyz")
+NO_STORE_PREFIXES = ("/api/", "/health", "/ready")
 
 
 def _security_headers(response: Response) -> None:

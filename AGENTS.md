@@ -14,6 +14,8 @@ same 25 agents.
 - The DP-001 guard (`dreamstore/hooks/dp001_pre_tool_guard.py`) blocks risky tool calls; set
   `WORKFLOW_STAGE` to your stage. Do not edit the guard, its policy, or dream artifacts by hand.
 - Reviewers never review their own code; the council needs 3 of 3 approvals.
+- Label illustrative data as such (`source_label` in config, shown in the UI); never present sample
+  history or curated traces as live state or captured sessions. Acceptance criteria live in `SPEC.md`.
 
 ## Coordination (1 + 6)
 

@@ -57,6 +57,8 @@ def workflow_view(store: ConfigStore) -> dict[str, Any]:
         "workflow_id": cfg["workflow_id"],
         "version": cfg["version"],
         "mode_label": cfg["mode_label"],
+        "scenario": cfg["scenario"],
+        "source_label": cfg["source_label"],
         "current_stage": cfg["current_stage"],
         "stages": stages,
     }
@@ -94,6 +96,7 @@ class TaskBackendService:
         return {
             "selected": chosen,
             "default_backend": registry.default_backend,
+            "source_label": self._store.get("task_backends")["source_label"],
             "backend": backend.describe(),
             "mapping": registry.map_workflow(chosen),
         }

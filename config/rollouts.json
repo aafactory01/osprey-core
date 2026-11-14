@@ -1,5 +1,6 @@
 {
-  "source_label": "Release ledger snapshot (config/rollouts.json)",
+  "scenario": "sample",
+  "source_label": "Illustrative rollout ledger (config/rollouts.json): sample records, not live Cloud Run traffic. The live serving revision is shown in the header from K_REVISION.",
   "traffic_total_percent": 100,
   "rollouts": [
     {
