@@ -1,0 +1,72 @@
+# Cloud Run service osprey-core (gement02, us-central1), deployed only by Google Cloud Deploy via skaffold.yaml.
+# Reproduces the live service settings (IAP on, ingress all, min/max 1 instance, startup CPU boost, concurrency 80,
+# 300s timeout, runtime service account, HMAC key from Secret Manager, TCP startup probe on 8080, 100% latest).
+# `image: osprey-core` is a placeholder that Cloud Deploy replaces with the S5 artifact from
+#   gcloud deploy releases create ... --images=osprey-core=<repo>@sha256:<digest>
+# Provenance values are Cloud Deploy deploy parameters (`# from-param: ${key}`), passed by scripts/s6_deploy.py as
+# --deploy-parameters=commit_sha=..,short_sha=..,build_id=..,image_digest=..,release=..; "unset" never ships.
+# IAM (run.invoker, iap.httpsResourceAccessor) is not part of this manifest and is never changed by a release.
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: osprey-core
+  labels:
+    app: osprey-core
+    commit: "unset" # from-param: ${short_sha}
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/iap-enabled: "true"
+spec:
+  template:
+    metadata:
+      labels:
+        app: osprey-core
+        commit: "unset" # from-param: ${short_sha}
+      annotations:
+        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/maxScale: "1"
+        run.googleapis.com/startup-cpu-boost: "true"
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      serviceAccountName: osprey-core-run@gement02.iam.gserviceaccount.com
+      containers:
+        - image: osprey-core
+          ports:
+            - name: http1
+              containerPort: 8080
+          env:
+            - name: OSPREY_PROJECT_SLUG
+              value: osprey-core
+            - name: AUDIT_HMAC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: osprey-core-audit-hmac-key
+                  key: latest
+            - name: OSPREY_COMMIT_SHA
+              value: "unset" # from-param: ${commit_sha}
+            - name: OSPREY_SHORT_SHA
+              value: "unset" # from-param: ${short_sha}
+            - name: OSPREY_CI_BUILD_ID
+              value: "unset" # from-param: ${build_id}
+            - name: OSPREY_IMAGE_DIGEST
+              value: "unset" # from-param: ${image_digest}
+            - name: OSPREY_CD_RELEASE
+              value: "unset" # from-param: ${release}
+            - name: OSPREY_CD_PIPELINE
+              value: osprey-core-cd
+            - name: OSPREY_CD_TARGET
+              value: osprey-core-prod
+          resources:
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          startupProbe:
+            tcpSocket:
+              port: 8080
+            timeoutSeconds: 240
+            periodSeconds: 240
+            failureThreshold: 1
+  traffic:
+    - latestRevision: true
+      percent: 100

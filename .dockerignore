@@ -14,6 +14,7 @@ htmlcov/
 .ruff_cache/
 node_modules/
 evidence/
+**/evidence/
 tests/
 requirements-dev.txt
 pytest.ini
@@ -21,3 +22,10 @@ pytest.ini
 *.tmp
 .env
 .env.*
+pytest_report.txt
+release_packet.json
+cloudbuild.yaml
+clouddeploy.yaml
+skaffold.yaml
+run-service.yaml
+/templates/

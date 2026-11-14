@@ -1,5 +1,16 @@
-# Cloud Build upload filter (gcloud builds submit / gcloud run deploy --source).
-.gcloudignore
+# Upload filter for `gcloud builds submit` (scripts/s5_release_gate.py) and `gcloud deploy releases create`
+# (scripts/s6_deploy.py). Starts from the Docker build-context filter and the git ignores, then re-includes what
+# the in-cloud unit-tests step and the Cloud Deploy render need. The image itself still honors .dockerignore.
 .git
-.gitignore
 #!include:.dockerignore
+#!include:.gitignore
+!.gitignore
+!.gcloudignore
+!tests/
+!requirements-dev.txt
+!pytest.ini
+!cloudbuild.yaml
+!clouddeploy.yaml
+!skaffold.yaml
+!run-service.yaml
+!templates/

@@ -1,0 +1,145 @@
+# Cloud Build CI for osprey-core (S5_RELEASE_GATE). Submitted only by scripts/s5_release_gate.py from a clean
+# checkout of the commit under test:
+#   gcloud builds submit <checkout> --config=<checkout>/cloudbuild.yaml --project=gement02 --region=us-central1 \
+#     --substitutions=COMMIT_SHA=<40 hex>,SHORT_SHA=<7 hex> --async
+# gcloud builds submit does not populate the built-in COMMIT_SHA/SHORT_SHA: without them MUST_MATCH rejects the
+# build, and guard-substitutions fails closed on any malformed value. Build values reach bash through env (never
+# by text interpolation); shell variables are written $$NAME so Cloud Build passes a literal $ to bash.
+steps:
+  - id: guard-substitutions
+    name: python:3.12-slim@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b
+    entrypoint: bash
+    env:
+      - LC_ALL=C
+      - CI_COMMIT_SHA=$COMMIT_SHA
+      - CI_SHORT_SHA=$SHORT_SHA
+      - CI_PROJECT_ID=$PROJECT_ID
+      - CI_LOCATION=$LOCATION
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        fail() { echo "guard-substitutions: $$*" >&2; exit 1; }
+        [[ $$CI_SHORT_SHA =~ ^[0-9a-f]{7}$$ ]] || fail "SHORT_SHA must be 7 lowercase hex characters"
+        [[ $$CI_COMMIT_SHA =~ ^[0-9a-f]{40}$$ ]] || fail "COMMIT_SHA must be 40 lowercase hex characters"
+        [[ $$CI_COMMIT_SHA == "$$CI_SHORT_SHA"* ]] || fail "COMMIT_SHA must start with SHORT_SHA"
+        [[ $$CI_PROJECT_ID == gement02 && $$CI_LOCATION == us-central1 ]] || fail "build must run in gement02/us-central1"
+        echo "guard-substitutions: commit $$CI_COMMIT_SHA short $$CI_SHORT_SHA in $$CI_PROJECT_ID/$$CI_LOCATION"
+
+  # Same digest-pinned base as the Dockerfile. Steps run as root, so pytest runs as an unprivileged user on a copy
+  # of the source (permission-based tests behave as on a workstation); the summary is tee'd for the packet.
+  - id: unit-tests
+    name: python:3.12-slim@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b
+    entrypoint: bash
+    env:
+      - PYTHONDONTWRITEBYTECODE=1
+      - PIP_DISABLE_PIP_VERSION_CHECK=1
+      - PIP_NO_CACHE_DIR=1
+      - PIP_ROOT_USER_ACTION=ignore
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        python -m venv /opt/ci-venv
+        /opt/ci-venv/bin/pip install --quiet -r requirements-dev.txt
+        useradd --system --uid 10002 --user-group --create-home --home-dir /home/ci --shell /usr/sbin/nologin ci
+        mkdir /tmp/src && cp -a /workspace/. /tmp/src/ && chown -R ci:ci /tmp/src
+        cd /tmp/src
+        /opt/ci-venv/bin/python -c 'import os, pwd, sys; u = pwd.getpwnam("ci"); os.setgroups([]); os.setgid(u.pw_gid); os.setuid(u.pw_uid); os.environ.update(HOME=u.pw_dir, USER="ci", LOGNAME="ci"); os.execv(sys.executable, [sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider"])' 2>&1 | tee /workspace/pytest_report.txt
+
+  - id: docker-build
+    name: gcr.io/cloud-builders/docker@sha256:dccbdf9b7877dc1b66427d769a55fe9d82c21655a88301e5eba3d0754c76d146
+    args:
+      - build
+      - --network=cloudbuild
+      - --label=org.opencontainers.image.revision=$COMMIT_SHA
+      - --label=org.opencontainers.image.version=$SHORT_SHA
+      - --label=org.opencontainers.image.source=https://github.com/aafactory01/osprey-core
+      - --label=org.opencontainers.image.title=osprey-core
+      - --tag=us-central1-docker.pkg.dev/gement02/osprey-scion/osprey-core:$SHORT_SHA
+      - .
+
+  # Boot the built image on the cloudbuild network and probe it from a second container of the same image.
+  - id: container-smoke
+    name: gcr.io/cloud-builders/docker@sha256:dccbdf9b7877dc1b66427d769a55fe9d82c21655a88301e5eba3d0754c76d146
+    entrypoint: bash
+    env:
+      - IMAGE_TAG_REF=us-central1-docker.pkg.dev/gement02/osprey-scion/osprey-core:$SHORT_SHA
+      - SMOKE_NAME=osprey-core-smoke-$BUILD_ID
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        trap 'docker logs --tail 40 "$$SMOKE_NAME" 2>&1 || true; docker rm -f "$$SMOKE_NAME" >/dev/null 2>&1 || true' EXIT
+        docker run --detach --name "$$SMOKE_NAME" --network cloudbuild --env OSPREY_PROJECT_SLUG=osprey-core "$$IMAGE_TAG_REF"
+        docker run --rm --network cloudbuild --entrypoint python "$$IMAGE_TAG_REF" -c '
+        import json, sys, time, urllib.request
+        base, deadline = sys.argv[1], time.monotonic() + 90
+        for path in sys.argv[2:]:
+            while True:
+                try:
+                    with urllib.request.urlopen(base + path, timeout=5) as resp:
+                        status, kind, raw = resp.status, resp.headers.get_content_type(), resp.read()
+                    break
+                except OSError as exc:
+                    if time.monotonic() > deadline:
+                        sys.exit(f"container-smoke: {path} unreachable: {exc}")
+                    time.sleep(2)
+            if status != 200 or kind != "application/json":
+                sys.exit(f"container-smoke: {path} -> {status} {kind}")
+            print(f"container-smoke: {path} -> 200 {kind} ({type(json.loads(raw)).__name__})")
+        ' "http://$$SMOKE_NAME:8080" /healthz /api/workflow
+
+  - id: docker-push
+    name: gcr.io/cloud-builders/docker@sha256:dccbdf9b7877dc1b66427d769a55fe9d82c21655a88301e5eba3d0754c76d146
+    args:
+      - push
+      - us-central1-docker.pkg.dev/gement02/osprey-scion/osprey-core:$SHORT_SHA
+
+  # Resolve the pushed repo@sha256 digest and write the release packet that S5/S6 verify (fields per config/cicd.json).
+  - id: release-packet
+    name: gcr.io/cloud-builders/docker@sha256:dccbdf9b7877dc1b66427d769a55fe9d82c21655a88301e5eba3d0754c76d146
+    entrypoint: bash
+    env:
+      - LC_ALL=C
+      - IMAGE_REPO=us-central1-docker.pkg.dev/gement02/osprey-scion/osprey-core
+      - IMAGE_TAG_REF=us-central1-docker.pkg.dev/gement02/osprey-scion/osprey-core:$SHORT_SHA
+      - CI_COMMIT_SHA=$COMMIT_SHA
+      - CI_SHORT_SHA=$SHORT_SHA
+      - CI_BUILD_ID=$BUILD_ID
+      - CI_PROJECT_ID=$PROJECT_ID
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        digest=""
+        while read -r line; do
+          if [[ $$line == "$$IMAGE_REPO@sha256:"* ]]; then digest="$${line#*@}"; fi
+        done < <(docker inspect --format '{{range .RepoDigests}}{{println .}}{{end}}' "$$IMAGE_TAG_REF")
+        [[ $$digest =~ ^sha256:[0-9a-f]{64}$$ ]] || { echo "release-packet: no pushed digest for $$IMAGE_TAG_REF" >&2; exit 1; }
+        summary="$$(awk 'NF { last = $$0 } END { print last }' /workspace/pytest_report.txt | tr -cd 'A-Za-z0-9 ,.()_:-')"
+        [[ $$summary =~ [0-9]+\ passed ]] || { echo "release-packet: no passing pytest summary" >&2; exit 1; }
+        printf '{"schema":"osprey-core/release-packet/v1","commit_sha":"%s","short_sha":"%s","build_id":"%s","project_id":"%s","image_tag_ref":"%s","image_ref":"%s@%s","image_digest":"%s","pytest_summary":"%s","created_at":"%s"}\n' \
+          "$$CI_COMMIT_SHA" "$$CI_SHORT_SHA" "$$CI_BUILD_ID" "$$CI_PROJECT_ID" "$$IMAGE_TAG_REF" "$$IMAGE_REPO" "$$digest" \
+          "$$digest" "$$summary" "$$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /workspace/release_packet.json
+        cat /workspace/release_packet.json
+
+# Cloud Build re-pushes this tag after the steps and records its digest in results.images (S5 cross-checks it).
+images:
+  - us-central1-docker.pkg.dev/gement02/osprey-scion/osprey-core:$SHORT_SHA
+
+artifacts:
+  objects:
+    location: gs://gement02_cloudbuild/osprey-core/release-packets/$SHORT_SHA/
+    paths:
+      - release_packet.json
+      - pytest_report.txt
+
+tags:
+  - osprey-core
+  - s5-release-gate
+
+options:
+  substitutionOption: MUST_MATCH
+
+timeout: 1800s
