@@ -202,12 +202,16 @@ def _route_target(value, stage_ids):
 
 
 def test_contract_route_table_agrees_when_declared(workflow, cicd):
+    stages = _stages(workflow)
     tables = list(_step_route_tables(cicd))
-    if not tables:
-        pytest.skip("config/cicd.json declares no Cloud Build step route table")
+    deploy = cicd.get("deploy") if isinstance(cicd.get("deploy"), dict) else {}
+    if not tables and "bounce_to" not in deploy:
+        pytest.skip("config/cicd.json declares no Cloud Build step route table or S6 bounce target")
     for table in tables:
         resolved = {step: _route_target(target, cicd["stage_ids"]) for step, target in table.items()}
-        assert resolved == _stages(workflow)["S5_RELEASE_GATE"]["bounce_to"]
+        assert resolved == stages["S5_RELEASE_GATE"]["bounce_to"]
+    if "bounce_to" in deploy:
+        assert _route_target(deploy["bounce_to"], cicd["stage_ids"]) == stages["S6_DEPLOY_CLOSE"]["bounce_to"]
 
 
 def test_workflow_doc_states_every_deterministic_command(workflow):

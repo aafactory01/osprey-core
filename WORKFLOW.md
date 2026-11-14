@@ -159,6 +159,7 @@ The bounce reopens the target stage and blocks every later stage again (Mode 2).
 
 - `.workflow/evidence/s5_release_packet.json`: commit, Cloud Build build id and step results, image digest.
 - `.workflow/evidence/s6_deploy_report.json`: Cloud Deploy release, rollout state, serving revision.
+- `scripts/s6_exit.py` writes its IAP probe and re-probe reports next to them in `.workflow/evidence/`.
 - `.workflow/evidence/` is runtime output. It is git-ignored (`evidence/` in `.gitignore`), and only the
   deterministic scripts write it. The guard blocks agent writes under `.workflow/` outside S1_SPEC.
 - Receipts: each gate decision becomes an HMAC-SHA256 receipt chained to the previous one
