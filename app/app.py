@@ -18,6 +18,7 @@ from app.config_store import REPO_ROOT, ConfigError, ConfigStore
 from app.errors import register_error_handlers
 from app.routes_core import core_bp
 from app.routes_ops import ops_bp
+from app.routes_pipeline import pipeline_bp
 from app.workflow_service import TaskBackendService
 
 CONTENT_SECURITY_POLICY = (
@@ -96,6 +97,7 @@ def create_app(root: Path | str | None = None) -> Flask:
     register_error_handlers(app)
     app.register_blueprint(core_bp)
     app.register_blueprint(ops_bp)
+    app.register_blueprint(pipeline_bp)
     return app
 
 

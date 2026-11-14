@@ -32,6 +32,8 @@
     <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 5l12 7-12 7V5z"/></symbol>
     <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3"/></symbol>
     <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></symbol>
+    <symbol id="i-build" viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></symbol>
+    <symbol id="i-deploy" viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1-.6-8A6 6 0 0 1 18 9a4.5 4.5 0 0 1 0 9"/><path d="M12 20v-8M9 15l3-3 3 3"/></symbol>
   </svg>
 
   <header class="topbar">
@@ -81,7 +83,12 @@
       <header class="panel-head">
         <div>
           <h2>Workflow stage timeline <mark class="badge" id="workflow-mode">Hybrid</mark></h2>
-          <p class="muted">Agentic stages S1 to S4, deterministic stages S5 and S6. Select a stage for owners, gates, and evidence.</p>
+          <p class="muted">Agentic stages S1 to S4, deterministic stages S5 and S6. Select a stage for owners, gates, and evidence. The release gate and deploy stages show live Cloud Build and Cloud Deploy status.</p>
+        </div>
+        <div class="panel-actions">
+          <button class="btn" type="button" id="pipeline-refresh" aria-controls="workflow-body">
+            <svg class="icon" aria-hidden="true"><use href="#i-refresh"></use></svg>Refresh live CI/CD</button>
+          <output id="pipeline-meta" class="small muted" aria-live="polite"></output>
         </div>
       </header>
       <div id="workflow-body" class="panel-body" aria-live="polite"></div>

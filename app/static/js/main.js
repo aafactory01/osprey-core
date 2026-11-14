@@ -5,6 +5,7 @@ import { initDrawer } from './drawer.js';
 import { initDreamDrawer, loadDreams } from './dreams.js';
 import { failure, loading, setSettings } from './dom.js';
 import { loadOverview } from './overview.js';
+import { initPipelineControls } from './pipeline.js';
 import { loadReceipts } from './receipts.js';
 import { initTabs } from './tabs.js';
 import { initTheme } from './theme.js';
@@ -57,6 +58,7 @@ async function boot() {
     meta: byId('replay-meta'), summary: byId('dreams-body'),
   });
   byId('overview-refresh').addEventListener('click', () => ensureLoaded('overview', true));
+  initPipelineControls({ button: byId('pipeline-refresh'), output: byId('pipeline-meta') });
   initTabs({ defaultTab: config.ui.default_tab, onActivate: (name) => ensureLoaded(name) });
   document.body.dataset.ready = 'true';
 }

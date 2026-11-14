@@ -202,6 +202,26 @@ def run_variant(browser, device, width, height, theme):
         sweep.check(len(seen) == 6, "expected 6 stages")
         return seen
 
+    def pipeline_panels():
+        page.click("#tab-workflow")
+        page.wait_for_selector('.timeline [data-pipeline-role="cd"] [data-pipeline-status] .badge')
+        doc = page.evaluate("async () => (await (await fetch('/api/pipeline')).json())")
+        result = {}
+        for role, key, state in (("ci", "release_gate", "status"), ("cd", "deploy_close", "rollout_state")):
+            stage_id = doc["stage_ids"][key]
+            panel = page.locator(f'li:has(> button.stage[data-stage="{stage_id}"]) [data-pipeline-role="{role}"]')
+            sweep.check(panel.count() == 1 and panel.is_visible(), f"{role} live panel missing under {stage_id}")
+            chip = panel.locator("[data-pipeline-status] .badge").first.get_attribute("data-status")
+            source = panel.locator(f'[data-pipeline-source="{role}"]').inner_text().strip()
+            sweep.check(chip == doc[role][state] and source == doc[role]["source_label"], f"{role} panel {chip!r} / {source!r}")
+            result[role] = {"status": chip, "source": doc[role]["source"], "label": source}
+        with page.expect_response(lambda r: r.url.endswith("/api/pipeline")):
+            page.click("#pipeline-refresh")
+        page.wait_for_function("() => document.getElementById('pipeline-refresh').getAttribute('aria-busy') === 'false'")
+        sweep.scan("pipeline panels")
+        sweep.shot("pipeline_panels")
+        return result
+
     def backends():
         page.click("#tab-task-backend")
         page.wait_for_selector(".backend-option")
@@ -304,9 +324,9 @@ def run_variant(browser, device, width, height, theme):
         return {key: {"checked": value["checked"], "min_ratio": value["min"]} for key, value in results.items()}
 
     for label, func in [("load", load), ("tabs", tabs), ("keyboard", keyboard), ("deep_link", deep_link),
-                        ("stage_drawers", stage_drawers), ("task_backends", backends), ("dp001_drawer", dream_drawer),
-                        ("receipts", receipts), ("theme_toggle", theme_toggle), ("health_refresh", health_refresh),
-                        ("contrast_aa", contrast)]:
+                        ("stage_drawers", stage_drawers), ("pipeline_panels", pipeline_panels), ("task_backends", backends),
+                        ("dp001_drawer", dream_drawer), ("receipts", receipts), ("theme_toggle", theme_toggle),
+                        ("health_refresh", health_refresh), ("contrast_aa", contrast)]:
         sweep.step(label, func)
     context.close()
     passed = not sweep.problems and not sweep.console and not sweep.page_errors and not sweep.bad_responses

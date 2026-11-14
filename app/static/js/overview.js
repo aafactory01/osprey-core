@@ -1,8 +1,9 @@
-// Overview tab: SLA/SLO health from live telemetry, rollout ledger, and recent request telemetry.
+// Overview tab: SLA/SLO health from live telemetry, live delivery pipeline, rollout ledger, and recent telemetry.
 import { api } from './api.js';
 import {
   badge, clear, el, failure, loading, percent, ratio, section, shortText, sourceNotice, stateBadge, table, text, uiSetting, utcTime,
 } from './dom.js';
+import { pipelineOverview, refreshPipeline, syncPipeline } from './pipeline.js';
 
 function sloCard(slo) {
   const head = el('div', { class: 'card-head' }, [el('h3', { text: slo.name }), stateBadge(slo.state)]);
@@ -97,14 +98,17 @@ async function settle(container, request, render) {
 
 export async function loadOverview(container) {
   const healthBox = el('div', { id: 'overview-health' });
+  const pipelineBox = pipelineOverview();
   const rolloutBox = el('div', { id: 'overview-rollouts' });
   const telemetryBox = el('div', { id: 'overview-telemetry' });
-  clear(container).append(healthBox, rolloutBox, telemetryBox);
+  clear(container).append(healthBox, pipelineBox, rolloutBox, telemetryBox);
   loading(healthBox, 'Loading SLA and SLO health');
   loading(rolloutBox, 'Loading rollouts');
   loading(telemetryBox, 'Loading telemetry');
+  syncPipeline();
   await Promise.all([
     settle(healthBox, api('/api/health'), healthView),
+    refreshPipeline(),
     settle(rolloutBox, api('/api/rollouts'), rolloutsView),
     settle(telemetryBox, api(`/api/telemetry?limit=${uiSetting('telemetry_rows')}`), telemetryView),
   ]);
