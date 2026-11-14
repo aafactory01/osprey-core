@@ -195,6 +195,12 @@ def test_preflight_failure_halts_before_building(root, result, code):
     assert rc == code and lines == [f"HALT PREFLIGHT: {result[1]['error_taxonomy']}"] and flow.gate.calls == []
 
 
+def test_skip_preflight_goes_straight_to_the_release_gate(root):
+    flow = stages(probe=Probe(preflight=(1, {"error_taxonomy": "EXIT_GATE_FAILED"})))
+    code, lines = run(root, flow, extra=["--skip-preflight"])
+    assert code == 0 and lines == ["CLOSE S6_DEPLOY_CLOSE"] and flow.probe.modes() == ["verify"]
+
+
 def test_release_requires_commit_and_config(temp_root):
     with pytest.raises(SystemExit):
         workflow_ctl.parse_args(["release"])
@@ -202,6 +208,18 @@ def test_release_requires_commit_and_config(temp_root):
     out = io.StringIO()
     assert workflow_ctl.main(["--config-root", str(temp_root), "status"], stdout=out) == 1
     assert out.getvalue().startswith("HALT CONFIG_MISSING")
+
+
+def test_stdout_carries_only_verdicts_and_summaries(root, capsys):
+    deps = Deps(runner=lambda cmd, timeout: pytest.fail(f"unexpected command {cmd}"), sleep=lambda _: None,
+                clock=lambda: 0.0, environ={})
+    argv = ["--config-root", str(root), "release", "--commit", COMMIT, "--token-command", "print-token"]
+    assert workflow_ctl.main(argv, deps=deps, stages=stages()) == 0
+    captured = capsys.readouterr()
+    assert captured.out.splitlines() == ["CLOSE S6_DEPLOY_CLOSE"] and '"config.load"' in captured.err
+    assert workflow_ctl.main(["--config-root", str(root), "status"]) == 0
+    lines = capsys.readouterr().out.splitlines()
+    assert lines and all("artifact" in json.loads(line) for line in lines)
 
 
 def test_status_summarizes_evidence_and_flags_malformed_files(root):
