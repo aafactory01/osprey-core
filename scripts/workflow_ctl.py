@@ -5,7 +5,8 @@
   python3 scripts/workflow_ctl.py status
 
 release:
-  PREFLIGHT        s6_exit --mode preflight (token, IAP gate, IAM on the live service); fail -> HALT, nothing built.
+  PREFLIGHT        s6_exit --mode preflight (token, IAP gate, IAM on the live service); fail -> HALT, nothing built
+                   (--skip-preflight bypasses it, e.g. to ship a fix while the live service is down).
   S5_RELEASE_GATE  s5_release_gate; fail -> "BOUNCE S5_RELEASE_GATE -> <route from config>", exit 1.
   S6_DEPLOY_CLOSE  s6_deploy, then s6_exit --mode verify; pass -> "CLOSE S6_DEPLOY_CLOSE", exit 0.
                    Exit-gate failure (or a failed deploy whose image may be serving) -> s6_rollback --execute
@@ -119,16 +120,17 @@ class Controller:
         key = "rollback_bounce" if rolled.get("executed") else "bounce"
         return self.say(key, fail, stage=s6, route=self.cfg["deploy"]["bounce_to"])
 
-    def release(self, commit: str, source: str | Path, token_command: str | None) -> int:
+    def release(self, commit: str, source: str | Path, token_command: str | None, preflight: bool = True) -> int:
         cfg, codes, ids = self.cfg, self.codes, self.cfg["stage_ids"]
         s5, s6, pre = ids["release_gate"], ids["deploy_close"], cfg["workflow"]["preflight_stage"]
         packet, report = resolve(cfg["evidence"]["s5_packet"]), resolve(cfg["evidence"]["s6_deploy_report"])
         common = {"config_root": self.config_root, "deps": self.deps}
         probe_args = {"packet_path": packet, "report_path": report, "token_command": token_command, **common}
-        rc, pre_summary = self.run_stage(f"{pre}:probe", lambda **kw: self.stages.probe(
-            mode=s6_exit.PREFLIGHT, token_command=token_command, **common, **kw))
-        if rc != codes["ok"]:
-            return self.say("halt", rc, stage=pre, reason=pre_summary.get("error_taxonomy"))
+        if preflight:
+            rc, pre_summary = self.run_stage(f"{pre}:probe", lambda **kw: self.stages.probe(
+                mode=s6_exit.PREFLIGHT, token_command=token_command, **common, **kw))
+            if rc != codes["ok"]:
+                return self.say("halt", rc, stage=pre, reason=pre_summary.get("error_taxonomy"))
         rc, gate = self.run_stage(f"{s5}:gate", lambda **kw: self.stages.gate(
             commit=commit, source=source, packet_path=packet, **common, **kw),
             resume=lambda summary: {"build_id": summary["build_id"]} if summary.get("build_id") else {})
@@ -184,14 +186,13 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     release.add_argument("--commit", required=True, help="40-hex commit (HEAD of --source)")
     release.add_argument("--source", default=str(REPO_ROOT), help="clean checkout of --commit (default: repo root)")
     release.add_argument("--token-command", help="IAP ID token command (default: $IAP_TOKEN_COMMAND)")
+    release.add_argument("--skip-preflight", action="store_true",
+                         help="skip the PREFLIGHT probe of the live service (e.g. to ship a fix while it is down)")
     sub.add_parser("status", help="print the packet, report, and ledger summaries")
     return parser.parse_args(argv)
 
 
-def main(argv: list[str] | None = None, deps: Deps | None = None, stages: Stages | None = None,
-         stdout: IO[str] | None = None) -> int:
-    args = parse_args(argv)
-    out = stdout if stdout is not None else sys.stdout
+def _dispatch(args: argparse.Namespace, deps: Deps | None, stages: Stages | None, out: IO[str], trace_id: str) -> int:
     try:
         cfg = load_config(args.config_root)
     except ConfigError as exc:
@@ -199,12 +200,20 @@ def main(argv: list[str] | None = None, deps: Deps | None = None, stages: Stages
         return 1
     if args.command == "status":
         return status(cfg, out)
+    controller = Controller(cfg, deps or Deps(), stages or Stages(), args.config_root, out, trace_id)
+    return controller.release(args.commit, args.source, args.token_command, not args.skip_preflight)
+
+
+def main(argv: list[str] | None = None, deps: Deps | None = None, stages: Stages | None = None,
+         stdout: IO[str] | None = None) -> int:
+    """stdout carries only verdict lines (release) or JSON summaries (status); telemetry goes to stderr."""
+    args = parse_args(argv)
+    out = stdout if stdout is not None else sys.stdout
     trace_id = telemetry.new_trace_id()
     token = telemetry.bind_trace_id(trace_id)
     previous = telemetry.use_stream(sys.stderr)
     try:
-        controller = Controller(cfg, deps or Deps(), stages or Stages(), args.config_root, out, trace_id)
-        return controller.release(args.commit, args.source, args.token_command)
+        return _dispatch(args, deps, stages, out, trace_id)
     finally:
         telemetry.use_stream(previous)
         telemetry.reset_trace_id(token)
