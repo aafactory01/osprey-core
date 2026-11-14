@@ -117,6 +117,15 @@ def test_evolver_exits_nonzero_on_regression(temp_root, tmp_path):
     assert json.loads((tmp_path / "dreamstore" / "scorecard.json").read_text())["gate"]["verdict"] == "FAIL"
 
 
+def test_evolver_exits_nonzero_when_gate_fails_without_regression(temp_root, tmp_path):
+    # Same version on both sides: 6/10 vs 6/10 is no regression, but 3 missed blocks fail the gate.
+    edit_json(temp_root / "config" / "night_dreaming.json",
+              lambda doc: doc["proposal"].update(from_version="1.0.0", to_version="1.0.0"))
+    code, summary = run_evolver(["--config-root", str(temp_root), "--out-root", str(tmp_path)])
+    assert code == 1 and summary["status"] == "gate_failed" and summary["gate"] == "FAIL"
+    assert (summary["baseline"], summary["candidate"]) == ("60%", "60%")
+
+
 def test_evolver_config_error_writes_nothing(temp_root, tmp_path):
     (temp_root / "config" / "dp001_guard_policy.json").unlink()
     code, summary = run_evolver(["--config-root", str(temp_root), "--out-root", str(tmp_path)])

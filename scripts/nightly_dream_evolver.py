@@ -27,7 +27,7 @@ if __package__ in (None, ""):
 from app import telemetry  # noqa: E402
 from app.config_store import REPO_ROOT, ConfigError, ConfigStore  # noqa: E402
 from dreamstore.hooks.dp001_policy import PolicyError  # noqa: E402
-from dreamstore.replay import ReplayError, run_shadow_replay  # noqa: E402
+from dreamstore.replay import GATE_PASS, ReplayError, run_shadow_replay  # noqa: E402
 
 EXIT_OK = 0
 EXIT_FAIL = 1
@@ -140,8 +140,11 @@ def run(config_root: Path, out_root: Path, write_synthesis: bool, day: date) -> 
         target.write_text(render_synthesis(dreaming["proposal"], report, day, generated_at), encoding="utf-8")
         written.append(relpath)
     regression = report["candidate"]["passed"] < report["baseline"]["passed"]
-    return (EXIT_FAIL if regression else EXIT_OK), {
-        "status": "regression" if regression else "ok",
+    # The S5 exit gate relies on this exit code: any gate check failure (not only a regression) fails closed.
+    gate_failed = report["gate"]["verdict"] != GATE_PASS
+    status = "regression" if regression else ("gate_failed" if gate_failed else "ok")
+    return (EXIT_FAIL if regression or gate_failed else EXIT_OK), {
+        "status": status,
         "proposal_id": report["proposal_id"],
         "baseline": report["baseline"]["pass_rate_label"],
         "candidate": report["candidate"]["pass_rate_label"],
