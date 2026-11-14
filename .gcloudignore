@@ -1,0 +1,5 @@
+# Cloud Build upload filter (gcloud builds submit / gcloud run deploy --source).
+.gcloudignore
+.git
+.gitignore
+#!include:.dockerignore

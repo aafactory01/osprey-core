@@ -1,0 +1,201 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Required keys and types for every JSON file the console loads. Validated by app/config_store.py; any violation fails closed with HTTP 503.",
+  "files": {
+    "app_settings": {
+      "path": "config/app_settings.json",
+      "spec": {"type": "dict", "required": {
+        "service_name": {"type": "str", "min_length": 1},
+        "console_title": {"type": "str", "min_length": 1},
+        "server": {"type": "dict", "required": {
+          "default_port": {"type": "int", "min": 1, "max": 65535},
+          "port_env_var": {"type": "str", "min_length": 1},
+          "bind_host": {"type": "str", "min_length": 1},
+          "max_request_bytes": {"type": "int", "min": 1, "max": 10485760}
+        }},
+        "runtime": {"type": "dict", "required": {
+          "service_env_var": {"type": "str", "min_length": 1},
+          "revision_env_var": {"type": "str", "min_length": 1},
+          "unset_label": {"type": "str", "min_length": 1}
+        }},
+        "telemetry": {"type": "dict", "required": {
+          "ring_size": {"type": "int", "min": 1, "max": 100000},
+          "default_limit": {"type": "int", "min": 1, "max": 100000},
+          "max_limit": {"type": "int", "min": 1, "max": 100000}
+        }},
+        "ui": {"type": "dict", "required": {
+          "fetch_timeout_ms": {"type": "int", "min": 1, "max": 600000},
+          "short_signature_chars": {"type": "int", "min": 1, "max": 64},
+          "short_trace_chars": {"type": "int", "min": 1, "max": 32},
+          "percent_fraction_digits": {"type": "int", "min": 0, "max": 6},
+          "ratio_fraction_digits": {"type": "int", "min": 0, "max": 6},
+          "telemetry_rows": {"type": "int", "min": 1, "max": 500},
+          "default_tab": {"type": "str", "enum": ["overview", "workflow", "task-backend", "dreams", "receipts"]}
+        }}
+      }}
+    },
+    "health": {
+      "path": "config/health.json",
+      "spec": {"type": "dict", "required": {
+        "source_label": {"type": "str", "min_length": 1},
+        "sample_path_prefix": {"type": "str", "min_length": 1},
+        "min_samples": {"type": "int", "min": 1},
+        "sla": {"type": "dict", "required": {
+          "id": "str", "name": "str", "window_label": "str",
+          "target": {"type": "number", "min": 0, "max": 1}
+        }},
+        "slos": {"type": "list", "min_items": 1, "items": {"type": "dict",
+          "required": {
+            "id": {"type": "str", "min_length": 1},
+            "name": {"type": "str", "min_length": 1},
+            "kind": {"type": "str", "enum": ["success_ratio", "latency_percentile"]},
+            "description": "str"
+          },
+          "optional": {
+            "target": {"type": "number", "min": 0, "max": 1},
+            "percentile": {"type": "number", "min": 0, "max": 1},
+            "target_ms": {"type": "number", "min": 0}
+          }
+        }}
+      }}
+    },
+    "rollouts": {
+      "path": "config/rollouts.json",
+      "spec": {"type": "dict", "required": {
+        "source_label": {"type": "str", "min_length": 1},
+        "traffic_total_percent": {"type": "int", "min": 1},
+        "rollouts": {"type": "list", "min_items": 1, "items": {"type": "dict", "required": {
+          "id": {"type": "str", "min_length": 1},
+          "service": "str", "revision": "str", "started_at": "str", "owner": "str", "health_gate": "str",
+          "strategy": {"type": "str", "enum": ["canary", "production"]},
+          "status": {"type": "str", "enum": ["active", "superseded", "rolled_back"]},
+          "traffic_percent": {"type": "int", "min": 0, "max": 100}
+        }}}
+      }}
+    },
+    "workflow_stages": {
+      "path": "config/workflow_stages.json",
+      "spec": {"type": "dict", "required": {
+        "workflow_id": "str", "version": "str", "mode_label": "str",
+        "current_stage": {"type": "str", "min_length": 1},
+        "mode_descriptions": {"type": "dict", "required": {"agentic": "str", "deterministic": "str"}},
+        "stages": {"type": "list", "min_items": 1, "items": {"type": "dict", "required": {
+          "id": {"type": "str", "min_length": 1},
+          "title": {"type": "str", "min_length": 1},
+          "mode": {"type": "str", "enum": ["agentic", "deterministic"]},
+          "owners": {"type": "list", "min_items": 1, "items": "str"},
+          "summary": "str",
+          "entry_gates": {"type": "list", "min_items": 1, "items": "str"},
+          "exit_gates": {"type": "list", "min_items": 1, "items": "str"},
+          "evidence": {"type": "list", "min_items": 1, "items": "str"}
+        }}}
+      }}
+    },
+    "agents": {
+      "path": "config/agents.json",
+      "spec": {"type": "dict", "required": {
+        "roster_id": "str",
+        "agents": {"type": "list", "min_items": 1, "items": {"type": "dict", "required": {
+          "id": {"type": "str", "min_length": 1}, "group": "str", "reports_to": "str", "responsibility": "str"
+        }}}
+      }}
+    },
+    "task_backends": {
+      "path": "config/task_backends.json",
+      "spec": {"type": "dict", "required": {
+        "default_backend": {"type": "str", "min_length": 1},
+        "backends": {"type": "dict", "min_items": 1, "values": {"type": "dict", "required": {
+          "display_name": {"type": "str", "min_length": 1},
+          "description": "str",
+          "issue_key_format": {"type": "str", "min_length": 1},
+          "project_key": {"type": "str", "min_length": 1},
+          "seq_start": {"type": "int", "min": 0},
+          "hash_chars": {"type": "int", "min": 1, "max": 64},
+          "capabilities": {"type": "list", "items": "str"},
+          "stage_map": {"type": "dict", "min_items": 1, "values": {"type": "dict", "required": {"status": "str", "label": "str"}}}
+        }}}
+      }}
+    },
+    "night_dreaming": {
+      "path": "config/night_dreaming.json",
+      "spec": {"type": "dict", "required": {
+        "proposal": {"type": "dict", "required": {
+          "id": "str", "title": "str", "skill": "str", "from_version": "str", "to_version": "str",
+          "hook": "str", "policy_file": "str", "human_gate": "str",
+          "rationale": {"type": "list", "min_items": 1, "items": "str"}
+        }},
+        "eval_set_path": {"type": "str", "min_length": 1},
+        "gate": {"type": "dict", "required": {"require_no_regression": "bool", "require_zero_false_allows": "bool"}},
+        "outputs": {"type": "dict", "required": {"scorecard": "str", "proposal": "str", "synthesis_dir": "str"}}
+      }}
+    },
+    "dp001_guard_policy": {
+      "path": "config/dp001_guard_policy.json",
+      "spec": {"type": "dict", "required": {
+        "policy_id": "str", "description": "str",
+        "active_version": "str", "baseline_version": "str", "candidate_version": "str",
+        "default_decision": {"type": "str", "enum": ["allow", "block"]},
+        "stage_env_var": "str", "version_env_var": "str",
+        "stage_order": {"type": "list", "min_items": 1, "items": "str"},
+        "io": {"type": "dict", "required": {
+          "max_stdin_bytes": {"type": "int", "min": 1, "max": 10485760},
+          "read_chunk_bytes": {"type": "int", "min": 1, "max": 10485760},
+          "stdin_timeout_seconds": {"type": "number", "min": 0, "max": 600}
+        }},
+        "tool_classes": {"type": "dict", "required": {
+          "shell": {"type": "dict", "required": {"tool_names": {"type": "list", "items": "str"}, "input_keys": {"type": "list", "items": "str"}}},
+          "file_write": {"type": "dict", "required": {"tool_names": {"type": "list", "items": "str"}, "input_keys": {"type": "list", "items": "str"}}}
+        }},
+        "versions": {"type": "dict", "min_items": 1, "values": {"type": "dict", "required": {
+          "released": "str", "summary": "str",
+          "rules": {"type": "list", "items": "dict"}
+        }}}
+      }}
+    },
+    "audit_receipts": {
+      "path": "config/audit_receipts.json",
+      "spec": {"type": "dict", "required": {
+        "chain_id": "str", "canonicalization": "str", "genesis_prev_signature": "str",
+        "algorithm": {"type": "str", "enum": ["HMAC-SHA256"]},
+        "key_env_var": {"type": "str", "min_length": 1},
+        "min_key_bytes": {"type": "int", "min": 16},
+        "key_id_chars": {"type": "int", "min": 1, "max": 64},
+        "short_signature_chars": {"type": "int", "min": 1, "max": 64},
+        "events": {"type": "list", "min_items": 1, "items": {"type": "dict", "required": {
+          "id": {"type": "str", "min_length": 1}, "stage": "str", "event": "str", "gate": "str",
+          "decision": {"type": "str", "enum": ["PASS", "BLOCK"]},
+          "actor": "str", "timestamp": "str", "evidence": "str"
+        }}}
+      }}
+    },
+    "rollback": {
+      "path": "config/rollback.json",
+      "spec": {"type": "dict", "required": {
+        "service": {"type": "str", "min_length": 1},
+        "region": {"type": "str", "min_length": 1},
+        "project_env_var": "str", "gcloud_bin": "str", "default_error_taxonomy": "str",
+        "command_timeout_seconds": {"type": "number", "min": 1, "max": 3600},
+        "rollback_traffic_percent": {"type": "int", "min": 1, "max": 100},
+        "commands": {"type": "dict", "required": {
+          "describe_service": {"type": "list", "min_items": 1, "items": "str"},
+          "list_revisions": {"type": "list", "min_items": 1, "items": "str"},
+          "update_traffic": {"type": "list", "min_items": 1, "items": "str"}
+        }},
+        "error_taxonomy": {"type": "list", "min_items": 1, "items": {"type": "dict", "required": {
+          "taxonomy": "str", "patterns": {"type": "list", "min_items": 1, "items": "str"}
+        }}}
+      }}
+    },
+    "shadow_replay_evals": {
+      "path": "dreamstore/evals/ops_release_guardrails_shadow_replay.json",
+      "spec": {"type": "dict", "required": {
+        "eval_set_id": "str", "skill": "str", "description": "str", "label_source": "str",
+        "cases": {"type": "list", "min_items": 1, "items": {"type": "dict", "required": {
+          "id": {"type": "str", "min_length": 1}, "title": "str", "recorded_at": "str", "rationale": "str",
+          "expected": {"type": "str", "enum": ["allow", "block"]},
+          "event": "dict"
+        }}}
+      }}
+    }
+  }
+}

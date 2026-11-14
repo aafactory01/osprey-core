@@ -1,0 +1,50 @@
+{
+  "source_label": "Release ledger snapshot (config/rollouts.json)",
+  "traffic_total_percent": 100,
+  "rollouts": [
+    {
+      "id": "R-104",
+      "service": "osprey-core",
+      "revision": "osprey-core-00004",
+      "strategy": "canary",
+      "status": "active",
+      "traffic_percent": 15,
+      "started_at": "2026-11-14T16:20:00Z",
+      "owner": "core-rollout-builder",
+      "health_gate": "p95 latency under 300 ms and success ratio at or above 99.5% for 30 minutes"
+    },
+    {
+      "id": "R-103",
+      "service": "osprey-core",
+      "revision": "osprey-core-00003",
+      "strategy": "production",
+      "status": "active",
+      "traffic_percent": 85,
+      "started_at": "2026-11-13T18:05:00Z",
+      "owner": "core-deployer",
+      "health_gate": "S5_RELEASE_GATE receipt verified"
+    },
+    {
+      "id": "R-102",
+      "service": "osprey-core",
+      "revision": "osprey-core-00002",
+      "strategy": "production",
+      "status": "superseded",
+      "traffic_percent": 0,
+      "started_at": "2026-11-11T17:42:00Z",
+      "owner": "core-deployer",
+      "health_gate": "S5_RELEASE_GATE receipt verified"
+    },
+    {
+      "id": "R-101",
+      "service": "osprey-core",
+      "revision": "osprey-core-00001",
+      "strategy": "canary",
+      "status": "rolled_back",
+      "traffic_percent": 0,
+      "started_at": "2026-11-10T15:10:00Z",
+      "owner": "core-rollout-builder",
+      "health_gate": "Rolled back by scripts/s6_rollback.py after p95 breach"
+    }
+  ]
+}

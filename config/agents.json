@@ -1,0 +1,30 @@
+{
+  "roster_id": "osprey-core-team",
+  "agents": [
+    {"id": "core-coordinator", "group": "coordination", "reports_to": "human-operator", "responsibility": "Owns the outcome, assigns stages, approves S1 and S5, and resolves cross-lane conflicts."},
+    {"id": "core-arch-subcoord", "group": "coordination", "reports_to": "core-coordinator", "responsibility": "Keeps the architecture coherent: module boundaries, config schema, and file leases."},
+    {"id": "core-backend-subcoord", "group": "coordination", "reports_to": "core-coordinator", "responsibility": "Splits API and service work into disjoint leases and tracks builder progress."},
+    {"id": "core-frontend-subcoord", "group": "coordination", "reports_to": "core-coordinator", "responsibility": "Splits console UI work, owns accessibility and theme consistency."},
+    {"id": "core-data-api-subcoord", "group": "coordination", "reports_to": "core-coordinator", "responsibility": "Owns data contracts between config files, API payloads, and the UI."},
+    {"id": "core-qa-release-subcoord", "group": "coordination", "reports_to": "core-coordinator", "responsibility": "Runs S3 and S4: test plans, council scheduling, and release evidence."},
+    {"id": "core-docs-subcoord", "group": "coordination", "reports_to": "core-coordinator", "responsibility": "Keeps AGENTS.md, WORKFLOW.md, and team memory accurate after each release."},
+    {"id": "core-planner", "group": "planning", "reports_to": "core-arch-subcoord", "responsibility": "Breaks outcomes into goals and tasks with effort and dependency estimates."},
+    {"id": "core-spec-writer", "group": "planning", "reports_to": "core-arch-subcoord", "responsibility": "Writes SPEC.md with acceptance criteria and a test plan for each task."},
+    {"id": "core-api-builder", "group": "build", "reports_to": "core-backend-subcoord", "responsibility": "Builds Flask endpoints with structured errors and telemetry."},
+    {"id": "core-ui-builder", "group": "build", "reports_to": "core-frontend-subcoord", "responsibility": "Builds console tabs, drawers, and responsive layouts fed only by the API."},
+    {"id": "core-db-builder", "group": "build", "reports_to": "core-data-api-subcoord", "responsibility": "Owns config files, schemas, and the fail-closed config loader."},
+    {"id": "core-chart-builder", "group": "build", "reports_to": "core-frontend-subcoord", "responsibility": "Builds scorecard bars, timelines, and other data visuals without hardcoded data."},
+    {"id": "core-rollout-builder", "group": "build", "reports_to": "core-backend-subcoord", "responsibility": "Owns canary and traffic-shift logic, including the rollback script."},
+    {"id": "core-slo-builder", "group": "build", "reports_to": "core-backend-subcoord", "responsibility": "Computes SLO compliance and error budgets from live telemetry."},
+    {"id": "core-observability-builder", "group": "build", "reports_to": "core-backend-subcoord", "responsibility": "Owns trace ids, measured latencies, JSON logs, and the telemetry ring."},
+    {"id": "core-grid-worker", "group": "build", "reports_to": "core-data-api-subcoord", "responsibility": "Runs batch replays and data transforms in parallel lanes."},
+    {"id": "core-budget-calc-worker", "group": "build", "reports_to": "core-data-api-subcoord", "responsibility": "Calculates token, compute, and error-budget usage for reports."},
+    {"id": "core-tester", "group": "quality", "reports_to": "core-qa-release-subcoord", "responsibility": "Writes and runs happy-path, edge-case, and chaos tests plus browser sweeps."},
+    {"id": "core-reviewer-gemini", "group": "quality", "reports_to": "core-qa-release-subcoord", "responsibility": "Council reviewer: correctness and spec coverage."},
+    {"id": "core-reviewer-opus", "group": "quality", "reports_to": "core-qa-release-subcoord", "responsibility": "Council reviewer: security, failure modes, and fail-closed behavior."},
+    {"id": "core-reviewer-fable", "group": "quality", "reports_to": "core-qa-release-subcoord", "responsibility": "Council reviewer: UX, accessibility, and operator clarity."},
+    {"id": "core-iap-security", "group": "release", "reports_to": "core-coordinator", "responsibility": "Owns IAP, secrets handling, the DP-001 guard policy, and eval labels."},
+    {"id": "core-docs-writer", "group": "docs", "reports_to": "core-docs-subcoord", "responsibility": "Writes runbooks, release notes, and lessons learned."},
+    {"id": "core-deployer", "group": "release", "reports_to": "core-qa-release-subcoord", "responsibility": "Runs S6: Cloud Run deploy behind IAP, smoke tests, and rollback if needed."}
+  ]
+}

@@ -1,0 +1,239 @@
+{
+  "policy_id": "ops-release-guardrails",
+  "description": "PreToolUse guard policy enforced by dreamstore/hooks/dp001_pre_tool_guard.py. Versions are immutable; promotion = changing active_version in a reviewed commit.",
+  "active_version": "1.1.0",
+  "baseline_version": "1.0.0",
+  "candidate_version": "1.1.0",
+  "default_decision": "allow",
+  "stage_env_var": "WORKFLOW_STAGE",
+  "version_env_var": "DP001_POLICY_VERSION",
+  "stage_order": ["S1_SPEC", "S2_CODE", "S3_TEST", "S4_REVIEW", "S5_RELEASE_GATE", "S6_DEPLOY_CLOSE"],
+  "io": {
+    "max_stdin_bytes": 262144,
+    "read_chunk_bytes": 65536,
+    "stdin_timeout_seconds": 5
+  },
+  "tool_classes": {
+    "shell": {
+      "tool_names": ["Bash", "run_shell_command", "run_command", "shell", "exec_command"],
+      "input_keys": ["command", "CommandLine", "cmd"]
+    },
+    "file_write": {
+      "tool_names": ["Write", "Edit", "MultiEdit", "NotebookEdit", "write_file", "replace", "edit_file"],
+      "input_keys": ["file_path", "path", "absolute_path", "TargetFile", "Path", "notebook_path"]
+    }
+  },
+  "versions": {
+    "1.0.0": {
+      "released": "2026-10-28",
+      "summary": "Initial release guardrails: git history, destructive deletes, cluster secrets, impersonation, secret echo, workflow files.",
+      "rules": [
+        {
+          "id": "R-GIT-FORCE-PUSH-MAIN",
+          "kind": "command_regex",
+          "tool_class": "shell",
+          "patterns": [
+            "\\bgit\\b[^;&|\\n]*\\bpush\\b[^;&|\\n]*\\s(?:-f|--force|--force-with-lease)\\b[^;&|\\n]*\\b(?:main|master)\\b",
+            "\\bgit\\b[^;&|\\n]*\\bpush\\b[^;&|\\n]*\\b(?:main|master)\\b[^;&|\\n]*\\s(?:-f|--force|--force-with-lease)\\b",
+            "\\bgit\\b[^;&|\\n]*\\bpush\\b[^;&|\\n]*\\s\\+[^\\s;&|]*\\b(?:main|master)\\b"
+          ],
+          "reason": "Force-pushing main rewrites shared history; push a new commit or open a pull request instead."
+        },
+        {
+          "id": "R-GIT-RESET-HARD-ORIGIN",
+          "kind": "command_regex",
+          "tool_class": "shell",
+          "patterns": ["\\bgit\\b[^;&|\\n]*\\breset\\s+--hard\\s+(?:origin\\b|@\\{u(?:pstream)?\\})"],
+          "reason": "git reset --hard against the remote discards local commits and other agents' work; stash or branch instead."
+        },
+        {
+          "id": "R-RM-RF",
+          "kind": "command_regex",
+          "tool_class": "shell",
+          "patterns": ["\\brm\\s+-(?:[A-Za-z]*[rR][A-Za-z]*f|[A-Za-z]*f[A-Za-z]*[rR])"],
+          "reason": "Recursive force delete is blocked."
+        },
+        {
+          "id": "R-RUN-SERVICE-DELETE",
+          "kind": "command_regex",
+          "tool_class": "shell",
+          "patterns": ["\\bgcloud\\s+(?:(?:alpha|beta)\\s+)?run\\s+services\\s+delete\\b"],
+          "reason": "Deleting a Cloud Run service drops every revision and its IAP binding; shift traffic with scripts/s6_rollback.py instead."
+        },
+        {
+          "id": "R-KUBECTL-DELETE-NS",
+          "kind": "command_regex",
+          "tool_class": "shell",
+          "patterns": ["\\bkubectl\\b[^;&|\\n]*\\bdelete\\s+(?:ns|namespaces?)\\b"],
+          "reason": "Deleting a namespace destroys every workload in it; scale or remove individual resources instead."
+        },
+        {
+          "id": "R-KUBECTL-SECRETS",
+          "kind": "command_regex",
+          "tool_class": "shell",
+          "patterns": ["\\bkubectl\\b[^;&|\\n]*\\b(?:get|describe)\\s+secrets?\\b"],
+          "reason": "Reading cluster secrets from an agent session leaks credentials into transcripts; mount them from Secret Manager."
+        },
+        {
+          "id": "R-IMPERSONATE-SA",
+          "kind": "command_regex",
+          "tool_class": "shell",
+          "patterns": ["--impersonate-service-account\\b"],
+          "reason": "Service-account impersonation from agent sessions is not allowed; use the workload's own identity."
+        },
+        {
+          "id": "R-SECRETS-ECHO",
+          "kind": "command_regex",
+          "tool_class": "shell",
+          "flags": ["IGNORECASE"],
+          "patterns": [
+            "\\b(?:echo|printf|cat)\\b[^;&|\\n]*\\$\\{?[A-Za-z0-9_]*(?:SECRET|TOKEN|PASSWORD|PASSWD|HMAC|API_KEY|PRIVATE_KEY)[A-Za-z0-9_]*",
+            "\\bprintenv\\s+[A-Za-z0-9_]*(?:SECRET|TOKEN|PASSWORD|PASSWD|HMAC|KEY)[A-Za-z0-9_]*",
+            "\\bgcloud\\s+secrets\\s+versions\\s+access\\b",
+            "\\bcat\\b[^;&|\\n]*[\\s/]\\.env\\b"
+          ],
+          "reason": "Printing secrets puts them in agent transcripts and logs; pass them with --set-secrets or 0600 files instead."
+        },
+        {
+          "id": "R-PROTECTED-WORKFLOW-PATHS",
+          "kind": "path_glob",
+          "tool_class": "file_write",
+          "globs": [".workflow/*", "WORKFLOW.yaml"],
+          "allowed_stages": ["S1_SPEC"],
+          "reason": "Workflow definitions change only during S1_SPEC under core-coordinator approval."
+        }
+      ]
+    },
+    "1.1.0": {
+      "released": "2026-11-14",
+      "summary": "DP-001: narrow rm -rf to root/home/repo targets, gate Cloud Run releases on IAP and S5, protect computed dream artifacts.",
+      "rules": [
+        {
+          "id": "R-GIT-FORCE-PUSH-MAIN",
+          "kind": "command_regex",
+          "tool_class": "shell",
+          "patterns": [
+            "\\bgit\\b[^;&|\\n]*\\bpush\\b[^;&|\\n]*\\s(?:-f|--force|--force-with-lease)\\b[^;&|\\n]*\\b(?:main|master)\\b",
+            "\\bgit\\b[^;&|\\n]*\\bpush\\b[^;&|\\n]*\\b(?:main|master)\\b[^;&|\\n]*\\s(?:-f|--force|--force-with-lease)\\b",
+            "\\bgit\\b[^;&|\\n]*\\bpush\\b[^;&|\\n]*\\s\\+[^\\s;&|]*\\b(?:main|master)\\b"
+          ],
+          "reason": "Force-pushing main rewrites shared history; push a new commit or open a pull request instead."
+        },
+        {
+          "id": "R-GIT-RESET-HARD-ORIGIN",
+          "kind": "command_regex",
+          "tool_class": "shell",
+          "patterns": ["\\bgit\\b[^;&|\\n]*\\breset\\s+--hard\\s+(?:origin\\b|@\\{u(?:pstream)?\\})"],
+          "reason": "git reset --hard against the remote discards local commits and other agents' work; stash or branch instead."
+        },
+        {
+          "id": "R-RM-RF",
+          "kind": "command_regex",
+          "tool_class": "shell",
+          "patterns": [
+            "\\brm\\s+(?:-[A-Za-z]*(?:[rR][A-Za-z]*f|f[A-Za-z]*[rR])[A-Za-z]*|--recursive\\s+--force|--force\\s+--recursive)(?:\\s+--no-preserve-root)?\\s+(?:--\\s+)?[\"']?(?:/|/\\*|~|~/|\\.|\\./|\\.\\.|\\*|\\$HOME|\\$\\{HOME\\}|\\$PWD|\\$\\{PWD\\}|\\$REPO_ROOT|\\$\\{REPO_ROOT\\})[\"']?(?=$|[\\s;&|])",
+            "\\brm\\b[^;&|\\n]*--no-preserve-root\\b"
+          ],
+          "reason": "rm -rf of the filesystem root, home, or repository root is irreversible; delete specific build paths instead."
+        },
+        {
+          "id": "R-RUN-SERVICE-DELETE",
+          "kind": "command_regex",
+          "tool_class": "shell",
+          "patterns": ["\\bgcloud\\s+(?:(?:alpha|beta)\\s+)?run\\s+services\\s+delete\\b"],
+          "reason": "Deleting a Cloud Run service drops every revision and its IAP binding; shift traffic with scripts/s6_rollback.py instead."
+        },
+        {
+          "id": "R-RUN-DEPLOY-PUBLIC",
+          "kind": "command_regex",
+          "tool_class": "shell",
+          "patterns": ["\\bgcloud\\s+(?:(?:alpha|beta)\\s+)?run\\s+deploy\\b[^;&|\\n]*\\s--allow-unauthenticated(?=$|[\\s=;&|])"],
+          "reason": "The console must never be public; deploy with --iap and --no-allow-unauthenticated."
+        },
+        {
+          "id": "R-RUN-PUBLIC-IAM",
+          "kind": "command_regex",
+          "tool_class": "shell",
+          "patterns": ["\\bgcloud\\s+(?:(?:alpha|beta)\\s+)?run\\s+services\\s+(?:add-iam-policy-binding|set-iam-policy)\\b[^;&|\\n]*\\ball(?:Authenticated)?Users\\b"],
+          "reason": "Granting run.invoker to allUsers or allAuthenticatedUsers bypasses IAP."
+        },
+        {
+          "id": "R-RUN-DEPLOY-NO-IAP",
+          "kind": "command_regex",
+          "tool_class": "shell",
+          "patterns": ["\\bgcloud\\s+(?:(?:alpha|beta)\\s+)?run\\s+deploy\\b"],
+          "unless_patterns": ["(?:^|\\s)--iap(?=$|[\\s;&|])"],
+          "reason": "Cloud Run deploys of the console must pass --iap so every request is authenticated by IAP."
+        },
+        {
+          "id": "R-DEPLOY-BEFORE-RELEASE-GATE",
+          "kind": "stage_gate",
+          "tool_class": "shell",
+          "min_stage": "S5_RELEASE_GATE",
+          "patterns": [
+            "\\bgcloud\\s+(?:(?:alpha|beta)\\s+)?run\\s+(?:deploy|services\\s+update-traffic|services\\s+replace)\\b",
+            "\\bs6_rollback\\.py\\b[^;&|\\n]*--execute\\b"
+          ],
+          "reason": "Release commands (S6) run only after the S5_RELEASE_GATE receipt exists."
+        },
+        {
+          "id": "R-KUBECTL-DELETE-NS",
+          "kind": "command_regex",
+          "tool_class": "shell",
+          "patterns": ["\\bkubectl\\b[^;&|\\n]*\\bdelete\\s+(?:ns|namespaces?)\\b"],
+          "reason": "Deleting a namespace destroys every workload in it; scale or remove individual resources instead."
+        },
+        {
+          "id": "R-KUBECTL-SECRETS",
+          "kind": "command_regex",
+          "tool_class": "shell",
+          "patterns": ["\\bkubectl\\b[^;&|\\n]*\\b(?:get|describe)\\s+secrets?\\b"],
+          "reason": "Reading cluster secrets from an agent session leaks credentials into transcripts; mount them from Secret Manager."
+        },
+        {
+          "id": "R-IMPERSONATE-SA",
+          "kind": "command_regex",
+          "tool_class": "shell",
+          "patterns": ["--impersonate-service-account\\b"],
+          "reason": "Service-account impersonation from agent sessions is not allowed; use the workload's own identity."
+        },
+        {
+          "id": "R-SECRETS-ECHO",
+          "kind": "command_regex",
+          "tool_class": "shell",
+          "flags": ["IGNORECASE"],
+          "patterns": [
+            "\\b(?:echo|printf|cat)\\b[^;&|\\n]*\\$\\{?[A-Za-z0-9_]*(?:SECRET|TOKEN|PASSWORD|PASSWD|HMAC|API_KEY|PRIVATE_KEY)[A-Za-z0-9_]*",
+            "\\bprintenv\\s+[A-Za-z0-9_]*(?:SECRET|TOKEN|PASSWORD|PASSWD|HMAC|KEY)[A-Za-z0-9_]*",
+            "\\bgcloud\\s+secrets\\s+versions\\s+access\\b",
+            "\\bcat\\b[^;&|\\n]*[\\s/]\\.env\\b"
+          ],
+          "reason": "Printing secrets puts them in agent transcripts and logs; pass them with --set-secrets or 0600 files instead."
+        },
+        {
+          "id": "R-SHELL-PROTECTED-PATH-WRITE",
+          "kind": "command_regex",
+          "tool_class": "shell",
+          "patterns": ["(?:>>?|\\btee\\b|\\bsed\\s+-i|\\bmv\\b|\\bcp\\b|\\brm\\b|\\btruncate\\b)[^;&|\\n]*(?:\\.workflow/|WORKFLOW\\.yaml|dreamstore/scorecard\\.json|dreamstore/proposals/|config/dp001_guard_policy\\.json)"],
+          "reason": "Shell writes to workflow definitions, dream artifacts, or the guard policy bypass the file-write gate."
+        },
+        {
+          "id": "R-PROTECTED-WORKFLOW-PATHS",
+          "kind": "path_glob",
+          "tool_class": "file_write",
+          "globs": [".workflow/*", "WORKFLOW.yaml"],
+          "allowed_stages": ["S1_SPEC"],
+          "reason": "Workflow definitions change only during S1_SPEC under core-coordinator approval."
+        },
+        {
+          "id": "R-PROTECTED-DREAM-ARTIFACTS",
+          "kind": "path_glob",
+          "tool_class": "file_write",
+          "globs": ["dreamstore/scorecard.json", "dreamstore/proposals/*", "dreamstore/hooks/*", "config/dp001_guard_policy.json"],
+          "allowed_stages": [],
+          "reason": "Scorecards and proposals are computed by scripts/nightly_dream_evolver.py; agents must not hand-edit them or the guard that grades them."
+        }
+      ]
+    }
+  }
+}

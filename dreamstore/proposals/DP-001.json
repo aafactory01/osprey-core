@@ -1,0 +1,52 @@
+{
+  "active_version": "1.1.0",
+  "from_version": "1.0.0",
+  "gate": {
+    "checks": [
+      {
+        "check": "candidate_not_worse_than_baseline",
+        "detail": "10/10 vs 6/10",
+        "pass": true
+      },
+      {
+        "check": "candidate_has_zero_false_allows",
+        "detail": "0 missed block(s)",
+        "pass": true
+      }
+    ],
+    "verdict": "PASS"
+  },
+  "generated_at": "2026-11-14T19:35:29Z",
+  "hook": "dreamstore/hooks/dp001_pre_tool_guard.py",
+  "human_gate": "Promote by setting active_version in config/dp001_guard_policy.json through a reviewed commit.",
+  "id": "DP-001",
+  "policy_file": "config/dp001_guard_policy.json",
+  "rationale": [
+    "Recorded S6 sessions deployed the console with --allow-unauthenticated and nothing stopped them.",
+    "A deploy was attempted in S3 before the release gate existed.",
+    "An agent hand-wrote dreamstore/scorecard.json instead of running the replay.",
+    "The v1.0.0 rm -rf rule blocked routine build cleanup and trained agents to work around the guard."
+  ],
+  "rule_diff": {
+    "added": [
+      "R-RUN-DEPLOY-PUBLIC",
+      "R-RUN-PUBLIC-IAM",
+      "R-RUN-DEPLOY-NO-IAP",
+      "R-DEPLOY-BEFORE-RELEASE-GATE",
+      "R-SHELL-PROTECTED-PATH-WRITE",
+      "R-PROTECTED-DREAM-ARTIFACTS"
+    ],
+    "modified": [
+      "R-RM-RF"
+    ],
+    "removed": []
+  },
+  "scorecard": {
+    "baseline": "60%",
+    "candidate": "100%"
+  },
+  "skill": "ops-release-guardrails",
+  "status": "ACTIVE",
+  "title": "Tighten ops-release-guardrails for Cloud Run release safety",
+  "to_version": "1.1.0"
+}

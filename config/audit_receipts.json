@@ -1,0 +1,19 @@
+{
+  "chain_id": "osprey-core-release-2026-11",
+  "algorithm": "HMAC-SHA256",
+  "canonicalization": "JSON with sorted keys, compact separators, UTF-8",
+  "key_env_var": "AUDIT_HMAC_KEY",
+  "min_key_bytes": 32,
+  "key_id_chars": 16,
+  "short_signature_chars": 12,
+  "genesis_prev_signature": "GENESIS",
+  "events": [
+    {"id": "RCPT-0001", "stage": "S1_SPEC", "event": "gate_decision", "gate": "S1 exit", "decision": "PASS", "actor": "core-coordinator", "timestamp": "2026-11-13T09:02:11Z", "evidence": "SPEC.md acceptance criteria approved"},
+    {"id": "RCPT-0002", "stage": "S2_CODE", "event": "stage_transition", "gate": "S2 entry", "decision": "PASS", "actor": "core-backend-subcoord", "timestamp": "2026-11-13T09:40:27Z", "evidence": "Five disjoint file leases granted"},
+    {"id": "RCPT-0003", "stage": "S2_CODE", "event": "gate_decision", "gate": "S2 exit", "decision": "PASS", "actor": "core-coordinator", "timestamp": "2026-11-13T14:12:03Z", "evidence": "AST zero-hardcoding gate green; max file 400 lines"},
+    {"id": "RCPT-0004", "stage": "S3_TEST", "event": "gate_decision", "gate": "S3 exit", "decision": "BLOCK", "actor": "core-tester", "timestamp": "2026-11-13T15:31:48Z", "evidence": "Two chaos tests failed: config file removed mid-run returned stale data"},
+    {"id": "RCPT-0005", "stage": "S3_TEST", "event": "gate_decision", "gate": "S3 exit", "decision": "PASS", "actor": "core-tester", "timestamp": "2026-11-13T17:05:36Z", "evidence": "pytest green after the fail-closed config fix"},
+    {"id": "RCPT-0006", "stage": "S4_REVIEW", "event": "stage_transition", "gate": "S4 entry", "decision": "PASS", "actor": "core-qa-release-subcoord", "timestamp": "2026-11-14T08:15:00Z", "evidence": "Council convened: gemini, opus, fable"},
+    {"id": "RCPT-0007", "stage": "S4_REVIEW", "event": "gate_decision", "gate": "DP-001 shadow replay", "decision": "PASS", "actor": "scripts/nightly_dream_evolver.py", "timestamp": "2026-11-14T10:02:44Z", "evidence": "ops-release-guardrails 60% baseline to 100% candidate on 10 recorded cases"}
+  ]
+}

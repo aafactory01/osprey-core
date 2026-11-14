@@ -1,0 +1,28 @@
+{
+  "source_label": "Live in-process request telemetry (this instance)",
+  "sample_path_prefix": "/api/",
+  "min_samples": 5,
+  "sla": {
+    "id": "console-availability",
+    "name": "Console availability (contract)",
+    "target": 0.999,
+    "window_label": "30-day rolling window"
+  },
+  "slos": [
+    {
+      "id": "api-success-ratio",
+      "name": "API success ratio",
+      "kind": "success_ratio",
+      "target": 0.995,
+      "description": "Share of /api requests answered without a 5xx status."
+    },
+    {
+      "id": "api-latency-p95",
+      "name": "API p95 latency",
+      "kind": "latency_percentile",
+      "percentile": 0.95,
+      "target_ms": 300,
+      "description": "95th percentile server-side latency measured with time.perf_counter()."
+    }
+  ]
+}

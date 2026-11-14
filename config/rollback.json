@@ -1,0 +1,21 @@
+{
+  "service": "osprey-core",
+  "region": "us-central1",
+  "project_env_var": "GOOGLE_CLOUD_PROJECT",
+  "gcloud_bin": "gcloud",
+  "command_timeout_seconds": 60,
+  "rollback_traffic_percent": 100,
+  "default_error_taxonomy": "GCLOUD_ERROR",
+  "commands": {
+    "describe_service": ["{gcloud}", "run", "services", "describe", "{service}", "--region={region}", "--project={project}", "--format=json", "--quiet"],
+    "list_revisions": ["{gcloud}", "run", "revisions", "list", "--service={service}", "--region={region}", "--project={project}", "--format=json", "--quiet"],
+    "update_traffic": ["{gcloud}", "run", "services", "update-traffic", "{service}", "--region={region}", "--project={project}", "--to-revisions={revision}={percent}", "--quiet"]
+  },
+  "error_taxonomy": [
+    {"taxonomy": "UNAUTHENTICATED", "patterns": ["\\b401\\b", "UNAUTHENTICATED", "[Rr]eauthentication", "do not currently have an active account"]},
+    {"taxonomy": "PERMISSION_DENIED", "patterns": ["\\b403\\b", "PERMISSION_DENIED", "[Pp]ermission denied"]},
+    {"taxonomy": "RATE_LIMITED", "patterns": ["\\b429\\b", "RESOURCE_EXHAUSTED", "Too Many Requests", "[Qq]uota exceeded"]},
+    {"taxonomy": "UNAVAILABLE", "patterns": ["\\b503\\b", "\\bUNAVAILABLE\\b", "Service Unavailable"]},
+    {"taxonomy": "NOT_FOUND", "patterns": ["\\b404\\b", "NOT_FOUND", "could not be found"]}
+  ]
+}

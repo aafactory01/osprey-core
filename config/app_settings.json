@@ -1,0 +1,29 @@
+{
+  "service_name": "osprey-core",
+  "console_title": "Service Release & Operations Console",
+  "server": {
+    "default_port": 8080,
+    "port_env_var": "PORT",
+    "bind_host": "0.0.0.0",
+    "max_request_bytes": 65536
+  },
+  "runtime": {
+    "service_env_var": "K_SERVICE",
+    "revision_env_var": "K_REVISION",
+    "unset_label": "local"
+  },
+  "telemetry": {
+    "ring_size": 500,
+    "default_limit": 50,
+    "max_limit": 500
+  },
+  "ui": {
+    "fetch_timeout_ms": 8000,
+    "short_signature_chars": 12,
+    "short_trace_chars": 8,
+    "percent_fraction_digits": 0,
+    "ratio_fraction_digits": 2,
+    "telemetry_rows": 8,
+    "default_tab": "overview"
+  }
+}

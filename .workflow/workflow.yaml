@@ -1,9 +1,84 @@
+# Hybrid release workflow for osprey-core.
+# Agentic stages (S1-S4): agents plan and execute; gates check evidence before a stage closes.
+# Deterministic stages (S5-S6): fixed scripts only; the DP-001 guard blocks S6 commands before S5.
+# The console serves the same stages from config/workflow_stages.json (tests keep both in sync).
 name: hybrid
-version: "28cc6c0c"
+version: "2.0.0"
+guard:
+  hook: dreamstore/hooks/dp001_pre_tool_guard.py
+  policy: config/dp001_guard_policy.json
+  stage_env_var: WORKFLOW_STAGE
+task_backend:
+  registry: .workflow/task_backend.py
+  config: config/task_backends.json
+  options: [farmtable, github, jira, gitlab, beads, linear]
 stages:
-  - S1_SPEC
-  - S2_CODE
-  - S3_TEST
-  - S4_REVIEW
-  - S5_RELEASE_GATE
-  - S6_DEPLOY_CLOSE
+  - id: S1_SPEC
+    mode: agentic
+    owners: [core-coordinator, core-planner, core-spec-writer]
+    entry_gates:
+      - Request is linked to an Outcome and Goal in the task backend
+      - No open S1 task exists for the same goal
+    exit_gates:
+      - SPEC.md lists acceptance criteria and a test plan
+      - core-coordinator approval is recorded as a signed receipt
+    evidence: [SPEC.md, receipt RCPT-0001]
+    max_attempts: 3
+  - id: S2_CODE
+    mode: agentic
+    owners: [core-backend-subcoord, core-frontend-subcoord, core-api-builder, core-ui-builder, core-db-builder]
+    entry_gates:
+      - S1 exit receipt verifies PASS
+      - Each builder holds a disjoint file lease
+    exit_gates:
+      - No source file exceeds 400 lines
+      - AST zero-hardcoding gate is green
+      - All builders report done with commit SHAs
+    evidence: [commit SHAs per lease, lease ledger]
+    max_attempts: 3
+  - id: S3_TEST
+    mode: agentic
+    owners: [core-qa-release-subcoord, core-tester]
+    entry_gates:
+      - S2 exit receipt verifies PASS
+    exit_gates:
+      - "pytest passes 100% (happy, edge, chaos): python -m pytest -q -p no:cacheprovider"
+      - Playwright sweep shows 0 console errors and 0 anomaly strings
+    evidence: [pytest summary line, Playwright receipt JSON and screenshots]
+    max_attempts: 3
+  - id: S4_REVIEW
+    mode: agentic
+    owners: [core-reviewer-gemini, core-reviewer-opus, core-reviewer-fable]
+    entry_gates:
+      - S3 evidence is attached to the task
+    exit_gates:
+      - 3 of 3 council approvals with reviewer different from builder
+      - No open blocking findings
+    evidence: [council review notes, council decision receipt]
+    max_attempts: 3
+  - id: S5_RELEASE_GATE
+    mode: deterministic
+    owners: [core-coordinator, core-iap-security]
+    command: python3 scripts/nightly_dream_evolver.py
+    entry_gates:
+      - S4 council decision is 3 of 3 approve
+    exit_gates:
+      - DP-001 guard policy is active and its shadow replay gate is PASS
+      - Audit receipt chain verifies PASS (POST /api/receipts/verify)
+      - Human release approval is recorded
+    evidence: [release gate receipt, dreamstore/scorecard.json]
+    max_attempts: 1
+  - id: S6_DEPLOY_CLOSE
+    mode: deterministic
+    owners: [core-deployer]
+    command: gcloud run deploy osprey-core --source . --region us-central1 --iap --no-allow-unauthenticated --set-secrets AUDIT_HMAC_KEY=<secret>:latest
+    rollback_command: python3 scripts/s6_rollback.py --execute
+    entry_gates:
+      - S5 receipt verifies PASS
+      - WORKFLOW_STAGE=S6_DEPLOY_CLOSE is set for the guard
+    exit_gates:
+      - New revision serves 100% of traffic behind IAP
+      - Unauthenticated GET returns 302 or 401
+      - scripts/s6_rollback.py dry-run finds a previous revision
+    evidence: [serving revision name, smoke-test log, rollback dry-run JSON]
+    max_attempts: 1

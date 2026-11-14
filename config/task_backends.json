@@ -1,0 +1,107 @@
+{
+  "default_backend": "farmtable",
+  "backends": {
+    "farmtable": {
+      "display_name": "FarmTable",
+      "description": "OGTAI DAG of outcomes, goals, tasks, and artifacts.",
+      "issue_key_format": "{project_key}-T-{seq}",
+      "project_key": "CORE",
+      "seq_start": 101,
+      "hash_chars": 6,
+      "capabilities": ["dag_dependencies", "artifact_links", "agent_leases", "nightly_schedules"],
+      "stage_map": {
+        "S1_SPEC": {"status": "PLANNED", "label": "stage:s1-spec"},
+        "S2_CODE": {"status": "IN_PROGRESS", "label": "stage:s2-code"},
+        "S3_TEST": {"status": "IN_PROGRESS", "label": "stage:s3-test"},
+        "S4_REVIEW": {"status": "IN_REVIEW", "label": "stage:s4-review"},
+        "S5_RELEASE_GATE": {"status": "AWAITING_GATE", "label": "stage:s5-release-gate"},
+        "S6_DEPLOY_CLOSE": {"status": "COMPLETED", "label": "stage:s6-deploy-close"}
+      }
+    },
+    "github": {
+      "display_name": "GitHub Issues",
+      "description": "Issues with stage labels on the repository.",
+      "issue_key_format": "{project_key}#{seq}",
+      "project_key": "aafactory01/osprey-core",
+      "seq_start": 41,
+      "hash_chars": 6,
+      "capabilities": ["labels", "assignees", "pull_request_links", "webhooks"],
+      "stage_map": {
+        "S1_SPEC": {"status": "open", "label": "stage/spec"},
+        "S2_CODE": {"status": "open", "label": "stage/code"},
+        "S3_TEST": {"status": "open", "label": "stage/test"},
+        "S4_REVIEW": {"status": "open", "label": "stage/review"},
+        "S5_RELEASE_GATE": {"status": "open", "label": "stage/release-gate"},
+        "S6_DEPLOY_CLOSE": {"status": "closed", "label": "stage/deployed"}
+      }
+    },
+    "jira": {
+      "display_name": "Jira",
+      "description": "Jira Software project with a release workflow.",
+      "issue_key_format": "{project_key}-{seq}",
+      "project_key": "CORE",
+      "seq_start": 210,
+      "hash_chars": 6,
+      "capabilities": ["workflow_transitions", "components", "fix_versions", "sla_fields"],
+      "stage_map": {
+        "S1_SPEC": {"status": "To Do", "label": "spec"},
+        "S2_CODE": {"status": "In Progress", "label": "code"},
+        "S3_TEST": {"status": "In QA", "label": "test"},
+        "S4_REVIEW": {"status": "In Review", "label": "review"},
+        "S5_RELEASE_GATE": {"status": "Ready for Release", "label": "release-gate"},
+        "S6_DEPLOY_CLOSE": {"status": "Done", "label": "deployed"}
+      }
+    },
+    "gitlab": {
+      "display_name": "GitLab",
+      "description": "GitLab issues with scoped workflow labels.",
+      "issue_key_format": "{project_key}#{seq}",
+      "project_key": "platform/osprey-core",
+      "seq_start": 77,
+      "hash_chars": 6,
+      "capabilities": ["scoped_labels", "milestones", "merge_request_links", "iterations"],
+      "stage_map": {
+        "S1_SPEC": {"status": "opened", "label": "workflow::spec"},
+        "S2_CODE": {"status": "opened", "label": "workflow::code"},
+        "S3_TEST": {"status": "opened", "label": "workflow::test"},
+        "S4_REVIEW": {"status": "opened", "label": "workflow::review"},
+        "S5_RELEASE_GATE": {"status": "opened", "label": "workflow::release-gate"},
+        "S6_DEPLOY_CLOSE": {"status": "closed", "label": "workflow::deployed"}
+      }
+    },
+    "beads": {
+      "display_name": "Beads",
+      "description": "Git-native issue graph with hash-based ids.",
+      "issue_key_format": "bd-{hash}",
+      "project_key": "osprey-core",
+      "seq_start": 1,
+      "hash_chars": 4,
+      "capabilities": ["git_native", "dependency_graph", "ready_queue", "offline_first"],
+      "stage_map": {
+        "S1_SPEC": {"status": "open", "label": "spec"},
+        "S2_CODE": {"status": "in_progress", "label": "code"},
+        "S3_TEST": {"status": "in_progress", "label": "test"},
+        "S4_REVIEW": {"status": "blocked", "label": "review"},
+        "S5_RELEASE_GATE": {"status": "blocked", "label": "release-gate"},
+        "S6_DEPLOY_CLOSE": {"status": "closed", "label": "deployed"}
+      }
+    },
+    "linear": {
+      "display_name": "Linear",
+      "description": "Linear team with cycle-based workflow states.",
+      "issue_key_format": "{project_key}-{seq}",
+      "project_key": "COR",
+      "seq_start": 330,
+      "hash_chars": 6,
+      "capabilities": ["cycles", "triage", "sub_issues", "git_branch_names"],
+      "stage_map": {
+        "S1_SPEC": {"status": "Backlog", "label": "Spec"},
+        "S2_CODE": {"status": "In Progress", "label": "Code"},
+        "S3_TEST": {"status": "In Progress", "label": "Test"},
+        "S4_REVIEW": {"status": "In Review", "label": "Review"},
+        "S5_RELEASE_GATE": {"status": "Todo", "label": "Release gate"},
+        "S6_DEPLOY_CLOSE": {"status": "Done", "label": "Deployed"}
+      }
+    }
+  }
+}

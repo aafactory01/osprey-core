@@ -1,38 +1,151 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Service Release & Operations Console</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-    <script src="/static/js/main.js" defer></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Service Release &amp; Operations Console</title>
+  <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="/static/js/theme-init.js"></script>
+  <script type="module" src="/static/js/main.js"></script>
 </head>
-<body class="light-theme">
-    <header>
-        <h1>Service Release & Operations Console</h1>
-        <button id="theme-toggle">Toggle Theme</button>
-    </header>
-    <main>
-        <section id="health-section">
-            <h2>SLA/SLO Health</h2>
-            <div id="health-data">Loading...</div>
-        </section>
-        <section id="rollouts-section">
-            <h2>Active Rollouts</h2>
-            <div id="rollouts-data">Loading...</div>
-        </section>
-        <section id="workflow-section">
-            <h2>Workflow Stage Timeline</h2>
-            <div id="workflow-data">Loading...</div>
-        </section>
-        <section id="dreams-section">
-            <h2>Night Dreaming DP-001</h2>
-            <div id="dreams-data">Loading...</div>
-        </section>
-        <section id="receipts-section">
-            <h2>Audit Receipts</h2>
-            <div id="receipts-data">Loading...</div>
-        </section>
-    </main>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <svg class="sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></symbol>
+    <symbol id="i-gauge" viewBox="0 0 24 24"><path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/><path d="M8 18h8"/></symbol>
+    <symbol id="i-flow" viewBox="0 0 24 24"><rect x="3" y="4" width="6" height="5" rx="1"/><rect x="15" y="4" width="6" height="5" rx="1"/><rect x="9" y="15" width="6" height="5" rx="1"/><path d="M6 9v3h12V9M12 12v3"/></symbol>
+    <symbol id="i-stack" viewBox="0 0 24 24"><path d="M12 3l9 4.5-9 4.5-9-4.5L12 3z"/><path d="M3 12l9 4.5 9-4.5"/><path d="M3 16.5L12 21l9-4.5"/></symbol>
+    <symbol id="i-dream" viewBox="0 0 24 24"><path d="M15 4a7 7 0 1 0 5 12 6 6 0 0 1-5-12z"/><path d="M18 3v3M16.5 4.5h3"/></symbol>
+    <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z"/><path d="M9 8h6M9 12h6M9 16h3"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8"/><path d="M4 4v4h4"/><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16"/><path d="M20 20v-4h-4"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></symbol>
+    <symbol id="i-cross" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3l9.5 17h-19L12 3z"/><path d="M12 10v4M12 17v.5"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+    <symbol id="i-agent" viewBox="0 0 24 24"><rect x="5" y="8" width="14" height="11" rx="2"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16.5h5"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15M14 7l5 5-5 5"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 5l12 7-12 7V5z"/></symbol>
+    <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3"/></symbol>
+  </svg>
+
+  <header class="topbar">
+    <div class="brand">
+      <svg class="icon icon-lg" aria-hidden="true"><use href="#i-shield"></use></svg>
+      <div>
+        <h1 id="console-title">Service Release &amp; Operations Console</h1>
+        <p class="meta" id="service-meta" aria-live="polite">Loading service metadata</p>
+      </div>
+    </div>
+    <button id="theme-toggle" class="btn btn-ghost" type="button" aria-pressed="false">
+      <svg class="icon theme-icon-dark" aria-hidden="true"><use href="#i-moon"></use></svg>
+      <svg class="icon theme-icon-light" aria-hidden="true"><use href="#i-sun"></use></svg>
+      <b class="theme-label">Dark theme</b>
+    </button>
+  </header>
+
+  <nav class="tabs" aria-label="Console sections">
+    <div role="tablist" id="tablist" aria-label="Console sections">
+      <button role="tab" type="button" id="tab-overview" data-hash="overview" aria-controls="panel-overview" aria-selected="true" tabindex="0">
+        <svg class="icon" aria-hidden="true"><use href="#i-gauge"></use></svg>Overview</button>
+      <button role="tab" type="button" id="tab-workflow" data-hash="workflow" aria-controls="panel-workflow" aria-selected="false" tabindex="-1">
+        <svg class="icon" aria-hidden="true"><use href="#i-flow"></use></svg>Workflow</button>
+      <button role="tab" type="button" id="tab-task-backend" data-hash="task-backend" aria-controls="panel-task-backend" aria-selected="false" tabindex="-1">
+        <svg class="icon" aria-hidden="true"><use href="#i-stack"></use></svg>Task Backend</button>
+      <button role="tab" type="button" id="tab-dreams" data-hash="dreams" aria-controls="panel-dreams" aria-selected="false" tabindex="-1">
+        <svg class="icon" aria-hidden="true"><use href="#i-dream"></use></svg>Night Dreaming</button>
+      <button role="tab" type="button" id="tab-receipts" data-hash="receipts" aria-controls="panel-receipts" aria-selected="false" tabindex="-1">
+        <svg class="icon" aria-hidden="true"><use href="#i-receipt"></use></svg>Audit Receipts</button>
+    </div>
+  </nav>
+
+  <main id="main" tabindex="-1">
+    <section role="tabpanel" id="panel-overview" aria-labelledby="tab-overview" tabindex="0">
+      <header class="panel-head">
+        <div>
+          <h2>Overview</h2>
+          <p class="muted">SLA and SLO health computed from live request telemetry, plus the rollout ledger.</p>
+        </div>
+        <button class="btn" type="button" id="overview-refresh">
+          <svg class="icon" aria-hidden="true"><use href="#i-refresh"></use></svg>Refresh</button>
+      </header>
+      <div id="overview-body" class="panel-body" aria-live="polite"></div>
+    </section>
+
+    <section role="tabpanel" id="panel-workflow" aria-labelledby="tab-workflow" tabindex="0" hidden>
+      <header class="panel-head">
+        <div>
+          <h2>Workflow stage timeline <mark class="badge" id="workflow-mode">Hybrid</mark></h2>
+          <p class="muted">Agentic stages S1 to S4, deterministic stages S5 and S6. Select a stage for owners, gates, and evidence.</p>
+        </div>
+      </header>
+      <div id="workflow-body" class="panel-body" aria-live="polite"></div>
+    </section>
+
+    <section role="tabpanel" id="panel-task-backend" aria-labelledby="tab-task-backend" tabindex="0" hidden>
+      <header class="panel-head">
+        <div>
+          <h2>Pluggable task backend</h2>
+          <p class="muted">Choose where S1 to S6 land. The selection is stored on the server for this process and echoed back.</p>
+        </div>
+      </header>
+      <div id="backend-body" class="panel-body" aria-live="polite"></div>
+    </section>
+
+    <section role="tabpanel" id="panel-dreams" aria-labelledby="tab-dreams" tabindex="0" hidden>
+      <header class="panel-head">
+        <div>
+          <h2>Night Dreaming</h2>
+          <p class="muted">DP-001 proposes ops-release-guardrails v1.1.0. The scorecard is computed by replaying recorded tool calls through the real guard.</p>
+        </div>
+        <button class="btn btn-primary" type="button" id="dream-open">
+          <svg class="icon" aria-hidden="true"><use href="#i-dream"></use></svg>Open DP-001</button>
+      </header>
+      <div id="dreams-body" class="panel-body" aria-live="polite"></div>
+    </section>
+
+    <section role="tabpanel" id="panel-receipts" aria-labelledby="tab-receipts" tabindex="0" hidden>
+      <header class="panel-head">
+        <div>
+          <h2>HMAC audit receipts</h2>
+          <p class="muted">Each receipt is signed with HMAC-SHA256 over canonical JSON and links to the previous signature.</p>
+        </div>
+        <button class="btn" type="button" id="chain-verify">
+          <svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg>Verify full chain</button>
+      </header>
+      <div id="receipts-body" class="panel-body" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <dialog id="stage-drawer" class="drawer" aria-modal="true" aria-labelledby="stage-drawer-title">
+    <div class="drawer-inner">
+      <header class="drawer-head">
+        <h2 id="stage-drawer-title">Stage</h2>
+        <button class="btn btn-icon" type="button" data-close aria-label="Close stage details">
+          <svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg></button>
+      </header>
+      <div class="drawer-body" id="stage-drawer-body"></div>
+    </div>
+  </dialog>
+
+  <dialog id="dream-drawer" class="drawer drawer-wide" aria-modal="true" aria-labelledby="dream-drawer-title">
+    <div class="drawer-inner">
+      <header class="drawer-head">
+        <h2 id="dream-drawer-title">DP-001 proposal</h2>
+        <button class="btn btn-icon" type="button" data-close aria-label="Close DP-001 drawer">
+          <svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg></button>
+      </header>
+      <div class="drawer-actions">
+        <button class="btn btn-primary" type="button" id="replay-run">
+          <svg class="icon" aria-hidden="true"><use href="#i-play"></use></svg>Re-run shadow replay</button>
+        <output id="replay-meta" class="muted" aria-live="polite"></output>
+      </div>
+      <div class="drawer-body" id="dream-drawer-body"></div>
+    </div>
+  </dialog>
 </body>
 </html>

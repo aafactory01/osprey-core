@@ -1,0 +1,28 @@
+{
+  "proposal": {
+    "id": "DP-001",
+    "title": "Tighten ops-release-guardrails for Cloud Run release safety",
+    "skill": "ops-release-guardrails",
+    "from_version": "1.0.0",
+    "to_version": "1.1.0",
+    "hook": "dreamstore/hooks/dp001_pre_tool_guard.py",
+    "policy_file": "config/dp001_guard_policy.json",
+    "human_gate": "Promote by setting active_version in config/dp001_guard_policy.json through a reviewed commit.",
+    "rationale": [
+      "Recorded S6 sessions deployed the console with --allow-unauthenticated and nothing stopped them.",
+      "A deploy was attempted in S3 before the release gate existed.",
+      "An agent hand-wrote dreamstore/scorecard.json instead of running the replay.",
+      "The v1.0.0 rm -rf rule blocked routine build cleanup and trained agents to work around the guard."
+    ]
+  },
+  "eval_set_path": "dreamstore/evals/ops_release_guardrails_shadow_replay.json",
+  "gate": {
+    "require_no_regression": true,
+    "require_zero_false_allows": true
+  },
+  "outputs": {
+    "scorecard": "dreamstore/scorecard.json",
+    "proposal": "dreamstore/proposals/DP-001.json",
+    "synthesis_dir": "team-memory/dreams"
+  }
+}
