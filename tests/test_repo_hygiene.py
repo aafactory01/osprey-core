@@ -79,13 +79,25 @@ def test_dockerignore_and_gcloudignore_keep_context_small():
 
 def test_dockerfile_contract():
     text = (REPO_ROOT / "Dockerfile").read_text()
-    assert text.splitlines()[1].strip() == "FROM python:3.12-slim"
+    from_lines = re.findall(r"^FROM\s+(\S+)", text, re.MULTILINE)
+    assert len(from_lines) == 1 and from_lines[0].startswith("python:3.12-slim@sha256:")
     for needle in ("PYTHONDONTWRITEBYTECODE=1", "PYTHONUNBUFFERED=1", "pip install --no-cache-dir -r requirements.txt",
                    '--bind "0.0.0.0:${PORT:-8080}"', "GUNICORN_WORKERS=", "GUNICORN_THREADS=", "GUNICORN_TIMEOUT=",
                    '"${GUNICORN_WORKERS:-1}"', "app.app:app", "HEALTHCHECK"):
         assert needle in text, needle
     user = re.findall(r"^USER\s+(\S+)", text, re.MULTILINE)
     assert user and user[-1].split(":")[0] not in ("root", "0")
+
+
+def test_every_from_line_is_digest_pinned():
+    """Supply-chain pin: every base image is referenced by an immutable sha256 digest."""
+    dockerfiles = [path for path in repo_files() if path.name == "Dockerfile" or path.name.endswith(".Dockerfile")]
+    assert dockerfiles
+    for path in dockerfiles:
+        lines = [line.strip() for line in path.read_text().splitlines() if re.match(r"^\s*FROM\s", line, re.IGNORECASE)]
+        assert lines, f"{path.name} has no FROM line"
+        for line in lines:
+            assert re.match(r"^FROM\s+(--platform=\S+\s+)?[\w./:-]+@sha256:[0-9a-f]{64}(\s+AS\s+\w+)?$", line), line
 
 
 def test_requirements_are_pinned_and_split():

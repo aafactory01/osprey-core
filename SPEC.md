@@ -112,6 +112,7 @@ The image runs gunicorn as a non-root user on 0.0.0.0:${PORT:-8080}. Deploys use
 --no-allow-unauthenticated; the guard blocks deploys without --iap, public deploys, and public IAM
 bindings.
 - tests/test_repo_hygiene.py::test_dockerfile_contract
+- tests/test_repo_hygiene.py::test_every_from_line_is_digest_pinned
 - tests/test_guard.py::test_baseline_differs_exactly_where_dp001_says
 - tests/test_guard_cli.py::test_version_override_selects_baseline
 
@@ -135,6 +136,8 @@ that disappear while the server runs. No magic numbers or inline data tables in 
 - tests/test_config_and_chaos.py::test_api_recovers_after_config_returns
 - tests/test_config_and_chaos.py::test_concurrent_requests_while_config_flaps_never_500
 - tests/test_api_core.py::test_readyz_503_when_any_config_is_broken
+- tests/test_api_core.py::test_http_error_codes_come_from_config_not_the_interpreter
+- tests/test_ast_zero_hardcoding.py::test_wire_codes_never_use_interpreter_enum_names
 - tests/test_ast_zero_hardcoding.py::test_no_magic_numbers
 - tests/test_ast_zero_hardcoding.py::test_no_inline_data_literals
 

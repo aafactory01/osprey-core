@@ -7,13 +7,14 @@ import math
 from http import HTTPStatus
 from typing import Any
 
-from flask import Flask, Response, jsonify, request
+from flask import Flask, Response, current_app, jsonify, request
 from werkzeug.exceptions import HTTPException
 
 from app import telemetry
 from app.config_store import ConfigError, reject_json_constant
 
 AUDIT_KEY_MISSING = "AUDIT_KEY_MISSING"
+FALLBACK_CODE_PREFIX = "HTTP_"
 
 
 class ApiError(Exception):
@@ -39,9 +40,24 @@ def error_body(code: str, message: str, taxonomy: str, **details: Any) -> dict[s
     return {"error": {"code": code, "taxonomy": taxonomy, "message": message, "trace_id": telemetry.current_trace_id(), **details}}
 
 
-def error_response(status: HTTPStatus, code: str, message: str, taxonomy: str, **details: Any) -> tuple[Response, int]:
+def error_response(status: HTTPStatus | int, code: str, message: str, taxonomy: str, **details: Any) -> tuple[Response, int]:
     response = jsonify(error_body(code, message, taxonomy, **details))
     return response, int(status)
+
+
+def wire_code(status: int) -> str:
+    """Stable error code for an HTTP status, from config/app_settings.json `http_error_codes`.
+
+    Never derived from `HTTPStatus.name`: Python 3.13 renamed members (413 REQUEST_ENTITY_TOO_LARGE
+    became CONTENT_TOO_LARGE), which would change the wire contract with the interpreter. Without
+    readable config the code is `HTTP_<status>`, which is equally interpreter-independent.
+    """
+    fallback = f"{FALLBACK_CODE_PREFIX}{status}"
+    try:
+        codes = current_app.extensions["console.store"].get("app_settings")["http_error_codes"]
+    except ConfigError:
+        return fallback
+    return str(codes.get(str(status), fallback))
 
 
 def _ensure_finite(value: Any) -> None:
@@ -102,10 +118,10 @@ def register_error_handlers(app: Flask) -> None:
 
     @app.errorhandler(HTTPException)
     def _http_error(exc: HTTPException) -> tuple[Response, int]:
-        status = HTTPStatus(exc.code or HTTPStatus.INTERNAL_SERVER_ERROR)
-        code = status.name
+        status = int(exc.code or HTTPStatus.INTERNAL_SERVER_ERROR)
+        code = wire_code(status)
         request.environ["console.error_taxonomy"] = code
-        return error_response(status, code, exc.description or status.phrase, code)
+        return error_response(status, code, exc.description or f"HTTP {status}", code)
 
     @app.errorhandler(Exception)
     def _unexpected(exc: Exception) -> tuple[Response, int]:

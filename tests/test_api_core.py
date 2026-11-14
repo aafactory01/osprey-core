@@ -219,7 +219,22 @@ def test_wrong_method_is_structured_405(client):
 def test_oversized_body_is_structured_413(client):
     limit = load_json("config/app_settings.json")["server"]["max_request_bytes"]
     resp = client.post("/api/task-backend", data="x" * (limit + 1), content_type="application/json")
-    assert resp.status_code == 413 and resp.get_json()["error"]["code"] == "REQUEST_ENTITY_TOO_LARGE"
+    assert resp.status_code == 413 and resp.get_json()["error"]["code"] == "PAYLOAD_TOO_LARGE"
+
+
+def test_http_error_codes_come_from_config_not_the_interpreter(temp_root, temp_client):
+    edit_json(temp_root / "config" / "app_settings.json", lambda doc: doc["http_error_codes"].update({"404": "ROUTE_NOT_FOUND"}))
+    assert temp_client.get("/api/nope").get_json()["error"]["code"] == "ROUTE_NOT_FOUND"
+    edit_json(temp_root / "config" / "app_settings.json", lambda doc: doc["http_error_codes"].pop("405"))
+    assert temp_client.delete("/api/receipts").get_json()["error"]["code"] == "HTTP_405"
+
+
+def test_http_error_codes_fall_back_without_config(temp_root, audit_key):
+    from app.app import create_app
+
+    (temp_root / "config" / "app_settings.json").unlink()
+    resp = create_app(temp_root).test_client().get("/api/nope")
+    assert resp.status_code == 404 and resp.get_json()["error"]["code"] == "HTTP_404"
 
 
 def test_api_responses_are_not_cached(client):

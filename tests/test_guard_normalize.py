@@ -3,12 +3,9 @@
 from __future__ import annotations
 
 import hashlib
-import subprocess
-import shutil
 
 import pytest
 
-from app.config_store import REPO_ROOT
 from dreamstore.hooks.dp001_normalize import is_protected_target, normalize_shell
 from dreamstore.hooks.dp001_pre_tool_guard import DEFAULT_POLICY_PATH, evaluate, load_policy_document, resolve_policy
 
@@ -69,13 +66,10 @@ def test_protected_paths_rule_still_sees_delete_targets(v11):
     assert evaluate(shell("rm -r -f .workflow/"), v11).rule_id == "R-SHELL-PROTECTED-PATH-WRITE"
 
 
-@pytest.mark.skipif(not shutil.which("git"), reason="git not installed")
+# sha256 of config/dp001_guard_policy.json as committed in 1ba7d2a; the engine fix must not change it.
+POLICY_SHA256 = "209c04e341ad07599397b4aa9b2cdafc5fff4d0314c73c041c465aecfb22a93c"
+
+
 def test_policy_versions_are_byte_identical_to_the_pushed_baseline():
-    """The engine fix must not rewrite the immutable policy versions committed in 1ba7d2a."""
-    proc = subprocess.run(["git", "cat-file", "-e", "1ba7d2a0bff498e566efd9cdc4faab339fe95d93"], cwd=REPO_ROOT,
-                          capture_output=True, check=False)
-    if proc.returncode != 0:
-        pytest.skip("baseline commit not available in this clone")
-    old = subprocess.run(["git", "show", "1ba7d2a0bff498e566efd9cdc4faab339fe95d93:config/dp001_guard_policy.json"],
-                         cwd=REPO_ROOT, capture_output=True, check=True).stdout
-    assert hashlib.sha256(old).hexdigest() == hashlib.sha256(DEFAULT_POLICY_PATH.read_bytes()).hexdigest()
+    """Pinned hash instead of git history, so the check also runs in shallow clones."""
+    assert hashlib.sha256(DEFAULT_POLICY_PATH.read_bytes()).hexdigest() == POLICY_SHA256

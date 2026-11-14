@@ -1,5 +1,7 @@
 # Service Release & Operations Console (osprey-core) - Cloud Run image.
-FROM python:3.12-slim
+# Base image pinned to the multi-arch index digest of python:3.12-slim (resolved from the Docker Hub
+# registry API on 2026-11-14); bump tag and digest together.
+FROM python:3.12-slim@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \

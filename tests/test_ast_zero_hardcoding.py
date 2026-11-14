@@ -116,6 +116,21 @@ def test_no_silent_exception_handlers():
     assert offenders == []
 
 
+def test_wire_codes_never_use_interpreter_enum_names():
+    """HTTPStatus.name/.phrase changed in Python 3.13 (413 became CONTENT_TOO_LARGE); codes come from config."""
+    offenders = []
+    for path in prod_python_files():
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+            if not (isinstance(node, ast.Attribute) and node.attr in ("name", "phrase")):
+                continue
+            root = node.value.func if isinstance(node.value, ast.Call) else node.value
+            while isinstance(root, ast.Attribute):
+                root = root.value
+            if isinstance(root, ast.Name) and (root.id == "HTTPStatus" or root.id.lower().endswith("status")):
+                offenders.append(f"{rel(path)}:{node.lineno} {ast.unparse(node)}")
+    assert offenders == []
+
+
 def test_no_stub_functions():
     offenders = []
     for path in prod_python_files():
