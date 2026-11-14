@@ -1,0 +1,12 @@
+# Skaffold config rendered and applied by Google Cloud Deploy (pipeline osprey-core-cd, target osprey-core-prod).
+# No build section: the image is the S5 Cloud Build artifact, passed by scripts/s6_deploy.py as
+#   gcloud deploy releases create ... --images=osprey-core=us-central1-docker.pkg.dev/gement02/osprey-scion/osprey-core@sha256:<digest>
+apiVersion: skaffold/v4beta7
+kind: Config
+metadata:
+  name: osprey-core
+manifests:
+  rawYaml:
+    - run-service.yaml
+deploy:
+  cloudrun: {}

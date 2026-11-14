@@ -1,6 +1,8 @@
 # Google Cloud Deploy pipeline for osprey-core (S6_DEPLOY_CLOSE).
 # Register or update: gcloud deploy apply --file=clouddeploy.yaml --region=us-central1 --project=gement02
-# Releases are created only by scripts/s6_deploy.py from an S5 release packet (immutable @sha256 image).
+# Releases are created only by scripts/s6_deploy.py from an S5 release packet (immutable @sha256 image); each release
+# renders skaffold.yaml -> run-service.yaml with the provenance deploy parameters (commit, build, digest, release).
+# Rollbacks: scripts/s6_rollback.py (gcloud deploy targets rollback to the previous SUCCEEDED release).
 apiVersion: deploy.cloud.google.com/v1
 kind: DeliveryPipeline
 metadata:
