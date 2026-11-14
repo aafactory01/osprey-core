@@ -1,0 +1,44 @@
+{
+  "agentConfig": {
+    "default_harness_config": "antigravity",
+    "detached": null,
+    "image": "scion-antigravity@sha256:61aa04a0d58d66bada3c356a50e572351eabd0d3fe10a22f4c1ee59b53808489",
+    "model": "Gemini 4 Argon (High)"
+  },
+  "contentHash": "sha256:14029bbc2aad48c64d555917eef9845561ee3a16b1cf13208e139c02708bb620",
+  "created": "2026-11-11T04:49:07.326993Z",
+  "defaultHarnessConfig": "antigravity",
+  "description": "3-Model QA Council — Gemini 4 Argon (High)",
+  "displayName": "QA Gemini 4 Argon",
+  "files": [
+    {
+      "mode": "0644",
+      "path": "agents.md",
+      "sha256": "1387209e3e4ec571099b645ce5b66545709db6c038ea004cd29ee3b908d95f9e",
+      "size": 11402
+    },
+    {
+      "mode": "0644",
+      "path": "scion-agent.yaml",
+      "sha256": "eb7ec9195795ab85a36ddcef29459c6be20df70b349f50fee971ee155cedc65e",
+      "size": 2265
+    },
+    {
+      "mode": "0644",
+      "path": "system-prompt.md",
+      "sha256": "7955929cdbe17d6df12fdedda877e1fcec250e3532a6b8ac30586ed4478bc9f2",
+      "size": 1111
+    }
+  ],
+  "harness": "antigravity",
+  "id": "8f3efd66-2634-69a1-0b5b-35edfc2b69ab",
+  "name": "qa-gemini",
+  "scope": "global",
+  "slug": "qa-gemini",
+  "source": {
+    "kind": "hub-blob-store",
+    "path": "templates/global/qa.blobs"
+  },
+  "status": "active",
+  "updated": "2026-11-14T20:37:48.019209Z"
+}

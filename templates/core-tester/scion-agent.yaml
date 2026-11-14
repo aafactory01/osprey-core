@@ -1,0 +1,13 @@
+# osprey-core project template "tester" (lane C1). Only this file is parsed; content files are referenced by name.
+schema_version: "1"
+description: "osprey-core tester: S3_TEST pytest triad (happy path, edge cases, chaos) with evidence"
+agent_instructions: agents.md
+system_prompt: system-prompt.md
+default_harness_config: claude
+model: "claude-opus-5-5@default"
+resources:
+  requests: {cpu: 250m, memory: 512Mi}
+  limits: {cpu: 500m, memory: 1Gi}
+  disk: 2Gi
+env:
+  OSPREY_ROLE: qa-tester

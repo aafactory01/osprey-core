@@ -1,0 +1,61 @@
+{
+  "agentConfig": {
+    "agent_instructions": "agents.md",
+    "default_harness_config": "antigravity",
+    "detached": null,
+    "env": {
+      "OSPREY_ROLE": "qa-tester"
+    },
+    "image": "scion-antigravity@sha256:61aa04a0d58d66bada3c356a50e572351eabd0d3fe10a22f4c1ee59b53808489",
+    "model": "Gemini 4 Argon (High)",
+    "resources": {
+      "disk": "2Gi",
+      "limits": {
+        "cpu": "500m",
+        "memory": "1Gi"
+      },
+      "requests": {
+        "cpu": "250m",
+        "memory": "512Mi"
+      }
+    },
+    "system_prompt": "system-prompt.md"
+  },
+  "contentHash": "sha256:3ebaf568bd8f489b38a16ce5ce8b56d7ff69079cebb34f1d9ef4cc8b74e544bd",
+  "created": "2026-11-14T19:25:23.594535Z",
+  "defaultHarnessConfig": "antigravity",
+  "description": "osprey-core tester: S3_TEST pytest triad (happy path, edge cases, chaos) with evidence",
+  "displayName": "osprey-core Tester",
+  "files": [
+    {
+      "mode": null,
+      "path": "agents.md",
+      "sha256": "7b992eee5d0ee340b82123abd486c6e0584e1245455c951ba4307e879bce4822",
+      "size": 1698
+    },
+    {
+      "mode": null,
+      "path": "scion-agent.yaml",
+      "sha256": "154bcaedfd2a07d8404a55e123524b23d96ad9d91071fa83465e73913b7922e4",
+      "size": 490
+    },
+    {
+      "mode": null,
+      "path": "system-prompt.md",
+      "sha256": "f32becf232f6dfdc5e908ae484c78c02c005d4ddb377c8c3f8b370f0fb57a95e",
+      "size": 251
+    }
+  ],
+  "harness": "antigravity",
+  "id": "aeb52e58-14d3-4513-a516-1016384e01f5",
+  "name": "core-tester",
+  "scope": "project",
+  "scopeId": "862ead69-1199-47d0-ba6c-16084cef482b",
+  "slug": "core-tester",
+  "source": {
+    "kind": "hub-api",
+    "path": "/api/v1/templates/aeb52e58-14d3-4513-a516-1016384e01f5"
+  },
+  "status": "active",
+  "updated": "2026-11-14T20:07:07.247906Z"
+}

@@ -1,0 +1,337 @@
+{
+  "count": 13,
+  "exported_at": "2026-11-14T22:10:54Z",
+  "schema": "osprey-core.templates-manifest/v1",
+  "source": {
+    "api": "/api/v1/templates",
+    "hub": "osprey-hub",
+    "project_id": "862ead69-1199-47d0-ba6c-16084cef482b"
+  },
+  "templates": [
+    {
+      "contentHash": "sha256:675e0f1234167697eb4d7bf9ae04e64ba08030b57e35d1a75e3e7a33278a5d1d",
+      "files": [
+        {
+          "path": "agents.md",
+          "sha256": "54b2a832cb33b61c931b84c6c9292c2696d31311d5043c618d535661c44e6692",
+          "size": 1779
+        },
+        {
+          "path": "scion-agent.yaml",
+          "sha256": "6a9d6ff448e4309390b1921481b2bd42250e483ecdace9961ca21e9eacb9f145",
+          "size": 527
+        },
+        {
+          "path": "system-prompt.md",
+          "sha256": "5fe6f1c8a22ee5f1bce680c5021c842eaa1d0291709ad706c8379f74e7f53a24",
+          "size": 252
+        }
+      ],
+      "harness": "antigravity",
+      "id": "1707b956-974f-4cc5-95f6-c629f9406351",
+      "model": "Gemini 4 Argon (High)",
+      "name": "core-builder",
+      "scope": "project"
+    },
+    {
+      "contentHash": "sha256:6db622ae63f463729f26cc74b44aabd0e6f0947e3cda2b2ce44b075a95c156f3",
+      "files": [
+        {
+          "path": "agents.md",
+          "sha256": "f017890779a5e903ffa576ce888c0af41862817a391b4378070bc76c59753121",
+          "size": 1983
+        },
+        {
+          "path": "scion-agent.yaml",
+          "sha256": "eb89fb21a70f0a4a89a723bd74fae178826ebf2b39307169f87eee019c0d10ef",
+          "size": 536
+        },
+        {
+          "path": "system-prompt.md",
+          "sha256": "c872947f1d6257dd76601bcd04bd4187662d33096e268b8d557971e77e94091d",
+          "size": 258
+        }
+      ],
+      "harness": "antigravity",
+      "id": "d3cf1e68-e505-4ce4-951c-f487b08728ce",
+      "model": "Gemini 4 Argon (High)",
+      "name": "core-coordinator",
+      "scope": "project"
+    },
+    {
+      "contentHash": "sha256:186834b9a5b3615ff2cb56030db8c78b2655b0a4c5d956bc741af5cad956f3ef",
+      "files": [
+        {
+          "path": "agents.md",
+          "sha256": "7c9b0249c416944a4871b6e1923ca50f6a8f493a8e710c6c9380ae8cf472b313",
+          "size": 1754
+        },
+        {
+          "path": "scion-agent.yaml",
+          "sha256": "4b49bdf76d593c9c331d2eddf0236ee15ced8f9ad2c16a9213034ccfd1ce6187",
+          "size": 516
+        },
+        {
+          "path": "system-prompt.md",
+          "sha256": "28ca61cb4371b0fbd1127b5200e1f1ead9883ced02b1a91b67eba739c8153f29",
+          "size": 253
+        }
+      ],
+      "harness": "antigravity",
+      "id": "69fbfbf7-3be2-4c47-99fc-1b473b8283e6",
+      "model": "Gemini 4 Argon (High)",
+      "name": "core-deployer",
+      "scope": "project"
+    },
+    {
+      "contentHash": "sha256:5bb4777030f363937728eb3c5a5a60c50c7d268b131405c090682d338aa5ea56",
+      "files": [
+        {
+          "path": "agents.md",
+          "sha256": "723bdb8d195805dd32d239928e4822485e8554fb869f6b6ab83f7874923c99d0",
+          "size": 1730
+        },
+        {
+          "path": "scion-agent.yaml",
+          "sha256": "35cfa8cbcee1eac1620444b774cbe0f8586222b39c5f4fd9f474e5bf92781f44",
+          "size": 498
+        },
+        {
+          "path": "system-prompt.md",
+          "sha256": "4d7894f056eff045b13a2bf9a49edde911a03425eae633dc9fda74c5c67984dd",
+          "size": 256
+        }
+      ],
+      "harness": "antigravity",
+      "id": "0b1db3d8-a7a6-4131-86ea-e49fcb89c36d",
+      "model": "Gemini 4 Argon (High)",
+      "name": "core-docs-writer",
+      "scope": "project"
+    },
+    {
+      "contentHash": "sha256:e5391d4c4f83c58185e89e3aa4bd530af0e5bf47f1e7a8529b39abaf6cd63a99",
+      "files": [
+        {
+          "path": "agents.md",
+          "sha256": "1e3f40466858cd424160ce5fd97236287fe76824f7cbe22d7e3350e7f864afc5",
+          "size": 1662
+        },
+        {
+          "path": "scion-agent.yaml",
+          "sha256": "b7bdf3e6acc018a08b98fdb0f7494ddc1d5e13a31aeaa31fca4a1f904b22bb88",
+          "size": 496
+        },
+        {
+          "path": "system-prompt.md",
+          "sha256": "b479b602fed746d0431113d91693d2c7d46863c7b15afcb87591db54f73a15f8",
+          "size": 247
+        }
+      ],
+      "harness": "antigravity",
+      "id": "23c6d55b-85c2-41ef-af42-d8a0b8c71ac1",
+      "model": "Gemini 4 Argon (High)",
+      "name": "core-planner",
+      "scope": "project"
+    },
+    {
+      "contentHash": "sha256:e5494689ad6363fe902d19ddab6927c2669e397bf6e7ef16b5f60b5b5ef339f4",
+      "files": [
+        {
+          "path": "agents.md",
+          "sha256": "a7af4bd64881b5d5414d1ea9d3775f9ea1942de61d2f0b798a1c51b85cc0a31d",
+          "size": 1701
+        },
+        {
+          "path": "scion-agent.yaml",
+          "sha256": "4959d07a25294913c34f3e3ef580237285a7bedf8e79a0c83d29409218c4a5cf",
+          "size": 505
+        },
+        {
+          "path": "system-prompt.md",
+          "sha256": "87d29d5c10fbb06d6839619ba368a48f8823eeed14c7fd2e24ba0a186c04112a",
+          "size": 253
+        }
+      ],
+      "harness": "antigravity",
+      "id": "730e4d22-0a28-4fd7-b942-291a8a880d1d",
+      "model": "Gemini 4 Argon (High)",
+      "name": "core-reviewer",
+      "scope": "project"
+    },
+    {
+      "contentHash": "sha256:ad2f28c3c293bb482bd27ad54b3a7430c71d0b38511084f178ea5e07a5eda465",
+      "files": [
+        {
+          "path": "agents.md",
+          "sha256": "78649fe93c0541587005dc3965581b6b7d83749e9c335d1d8db71b9b4fd38966",
+          "size": 1782
+        },
+        {
+          "path": "scion-agent.yaml",
+          "sha256": "ccfd8f9d5175fd09d05016461ef83f3e3146dfc8f479b23c58d11eb74e6ab375",
+          "size": 513
+        },
+        {
+          "path": "system-prompt.md",
+          "sha256": "ef41af3c02a20d218f6a5bcf301b178effa933aae15ba81fb621487bafad9550",
+          "size": 261
+        }
+      ],
+      "harness": "antigravity",
+      "id": "8975b7b9-c3a2-4a0a-9248-e5090163ef99",
+      "model": "Gemini 4 Argon (High)",
+      "name": "core-security-auditor",
+      "scope": "project"
+    },
+    {
+      "contentHash": "sha256:38c50dfad9b70e873f64d95dfff7e7f9ef8c73a99811ad277fee0825128b9ab1",
+      "files": [
+        {
+          "path": "agents.md",
+          "sha256": "846ea59f2009ff4dcce6398066acbb8fb94e66a0790d9172f21e04397539e87c",
+          "size": 1696
+        },
+        {
+          "path": "scion-agent.yaml",
+          "sha256": "1830f7597bf96edac25ce941cf83f94c2f7ae4cf2980a80fe6036832a11313df",
+          "size": 502
+        },
+        {
+          "path": "system-prompt.md",
+          "sha256": "7ffb00148d7e2e40aa425761729bd82e8a09401410ba0f75dd182b665898e585",
+          "size": 251
+        }
+      ],
+      "harness": "antigravity",
+      "id": "978d3c11-6ad9-4c64-9ab9-0f5f1adc263b",
+      "model": "Gemini 4 Argon (High)",
+      "name": "core-spec-writer",
+      "scope": "project"
+    },
+    {
+      "contentHash": "sha256:dd8af2a630c19d84fc4e3a61d8eb80f9365ac992d0d15d7eec31496294b90cc8",
+      "files": [
+        {
+          "path": "agents.md",
+          "sha256": "a576a3b606010b5e7d29271547802684776a5a0e8e8ffc8b8b420f29effadda6",
+          "size": 1843
+        },
+        {
+          "path": "scion-agent.yaml",
+          "sha256": "3123206bcbe3b8b7e71248c28b6d5e67e2e65dce5c271c6c774283856ecfcb34",
+          "size": 507
+        },
+        {
+          "path": "system-prompt.md",
+          "sha256": "b145369cf7ce1048bc59daff52fe74347f1c0a9eca2e49fb793e511f0760943b",
+          "size": 255
+        }
+      ],
+      "harness": "antigravity",
+      "id": "3c94e2d4-e3ce-42ce-b80f-a4f3aaa5805a",
+      "model": "Gemini 4 Argon (High)",
+      "name": "core-sub-coordinator",
+      "scope": "project"
+    },
+    {
+      "contentHash": "sha256:3ebaf568bd8f489b38a16ce5ce8b56d7ff69079cebb34f1d9ef4cc8b74e544bd",
+      "files": [
+        {
+          "path": "agents.md",
+          "sha256": "7b992eee5d0ee340b82123abd486c6e0584e1245455c951ba4307e879bce4822",
+          "size": 1698
+        },
+        {
+          "path": "scion-agent.yaml",
+          "sha256": "154bcaedfd2a07d8404a55e123524b23d96ad9d91071fa83465e73913b7922e4",
+          "size": 490
+        },
+        {
+          "path": "system-prompt.md",
+          "sha256": "f32becf232f6dfdc5e908ae484c78c02c005d4ddb377c8c3f8b370f0fb57a95e",
+          "size": 251
+        }
+      ],
+      "harness": "antigravity",
+      "id": "aeb52e58-14d3-4513-a516-1016384e01f5",
+      "model": "Gemini 4 Argon (High)",
+      "name": "core-tester",
+      "scope": "project"
+    },
+    {
+      "contentHash": "sha256:74324b8944e4c0e0673f504188bfc39aafb6c2256b659116125cd4f1bcc57abb",
+      "files": [
+        {
+          "path": "agents.md",
+          "sha256": "1387209e3e4ec571099b645ce5b66545709db6c038ea004cd29ee3b908d95f9e",
+          "size": 11402
+        },
+        {
+          "path": "scion-agent.yaml",
+          "sha256": "eb7ec9195795ab85a36ddcef29459c6be20df70b349f50fee971ee155cedc65e",
+          "size": 2265
+        },
+        {
+          "path": "system-prompt.md",
+          "sha256": "7955929cdbe17d6df12fdedda877e1fcec250e3532a6b8ac30586ed4478bc9f2",
+          "size": 1111
+        }
+      ],
+      "harness": "claude",
+      "id": "22d9c82a-ea11-f95e-50f5-5519aa7ffc56",
+      "model": "claude-fable-5-1@default",
+      "name": "qa-fable",
+      "scope": "global"
+    },
+    {
+      "contentHash": "sha256:14029bbc2aad48c64d555917eef9845561ee3a16b1cf13208e139c02708bb620",
+      "files": [
+        {
+          "path": "agents.md",
+          "sha256": "1387209e3e4ec571099b645ce5b66545709db6c038ea004cd29ee3b908d95f9e",
+          "size": 11402
+        },
+        {
+          "path": "scion-agent.yaml",
+          "sha256": "eb7ec9195795ab85a36ddcef29459c6be20df70b349f50fee971ee155cedc65e",
+          "size": 2265
+        },
+        {
+          "path": "system-prompt.md",
+          "sha256": "7955929cdbe17d6df12fdedda877e1fcec250e3532a6b8ac30586ed4478bc9f2",
+          "size": 1111
+        }
+      ],
+      "harness": "antigravity",
+      "id": "8f3efd66-2634-69a1-0b5b-35edfc2b69ab",
+      "model": "Gemini 4 Argon (High)",
+      "name": "qa-gemini",
+      "scope": "global"
+    },
+    {
+      "contentHash": "sha256:c62f8b47a0b78db4773593646cf00e3f59cf7a8f54742cfc80e3eccd8d70f740",
+      "files": [
+        {
+          "path": "agents.md",
+          "sha256": "1387209e3e4ec571099b645ce5b66545709db6c038ea004cd29ee3b908d95f9e",
+          "size": 11402
+        },
+        {
+          "path": "scion-agent.yaml",
+          "sha256": "eb7ec9195795ab85a36ddcef29459c6be20df70b349f50fee971ee155cedc65e",
+          "size": 2265
+        },
+        {
+          "path": "system-prompt.md",
+          "sha256": "7955929cdbe17d6df12fdedda877e1fcec250e3532a6b8ac30586ed4478bc9f2",
+          "size": 1111
+        }
+      ],
+      "harness": "claude",
+      "id": "24a17929-ae53-b0e4-b7d0-82fd38a14def",
+      "model": "claude-opus-5-5@default",
+      "name": "qa-opus",
+      "scope": "global"
+    }
+  ]
+}

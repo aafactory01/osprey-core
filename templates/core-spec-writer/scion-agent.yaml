@@ -1,0 +1,13 @@
+# osprey-core project template "spec-writer" (lane C1). Only this file is parsed; content files are referenced by name.
+schema_version: "1"
+description: "osprey-core spec writer: S1_SPEC API contracts, config schemas and numbered acceptance criteria"
+agent_instructions: agents.md
+system_prompt: system-prompt.md
+default_harness_config: antigravity
+model: "Gemini 4 Argon (High)"
+resources:
+  requests: {cpu: 250m, memory: 512Mi}
+  limits: {cpu: 500m, memory: 1Gi}
+  disk: 2Gi
+env:
+  OSPREY_ROLE: lead

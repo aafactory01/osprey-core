@@ -1,0 +1,61 @@
+{
+  "agentConfig": {
+    "agent_instructions": "agents.md",
+    "default_harness_config": "antigravity",
+    "detached": null,
+    "env": {
+      "OSPREY_ROLE": "developer"
+    },
+    "image": "scion-antigravity@sha256:61aa04a0d58d66bada3c356a50e572351eabd0d3fe10a22f4c1ee59b53808489",
+    "model": "Gemini 4 Argon (High)",
+    "resources": {
+      "disk": "2Gi",
+      "limits": {
+        "cpu": "500m",
+        "memory": "1Gi"
+      },
+      "requests": {
+        "cpu": "250m",
+        "memory": "512Mi"
+      }
+    },
+    "system_prompt": "system-prompt.md"
+  },
+  "contentHash": "sha256:675e0f1234167697eb4d7bf9ae04e64ba08030b57e35d1a75e3e7a33278a5d1d",
+  "created": "2026-11-14T19:25:19.604946Z",
+  "defaultHarnessConfig": "antigravity",
+  "description": "osprey-core builder: S2_CODE implementation (API, UI, data, charts, rollout, SLO, observability) at <= 400 LOC per file",
+  "displayName": "osprey-core Builder",
+  "files": [
+    {
+      "mode": null,
+      "path": "agents.md",
+      "sha256": "54b2a832cb33b61c931b84c6c9292c2696d31311d5043c618d535661c44e6692",
+      "size": 1779
+    },
+    {
+      "mode": null,
+      "path": "scion-agent.yaml",
+      "sha256": "6a9d6ff448e4309390b1921481b2bd42250e483ecdace9961ca21e9eacb9f145",
+      "size": 527
+    },
+    {
+      "mode": null,
+      "path": "system-prompt.md",
+      "sha256": "5fe6f1c8a22ee5f1bce680c5021c842eaa1d0291709ad706c8379f74e7f53a24",
+      "size": 252
+    }
+  ],
+  "harness": "antigravity",
+  "id": "1707b956-974f-4cc5-95f6-c629f9406351",
+  "name": "core-builder",
+  "scope": "project",
+  "scopeId": "862ead69-1199-47d0-ba6c-16084cef482b",
+  "slug": "core-builder",
+  "source": {
+    "kind": "hub-api",
+    "path": "/api/v1/templates/1707b956-974f-4cc5-95f6-c629f9406351"
+  },
+  "status": "active",
+  "updated": "2026-11-14T20:07:07.247906Z"
+}
