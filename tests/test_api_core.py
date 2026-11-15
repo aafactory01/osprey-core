@@ -305,6 +305,23 @@ def test_permissions_policy_invalid_config_fails_closed(temp_root, temp_client):
     assert resp.get_json()["error"]["taxonomy"] == "CONFIG_SCHEMA"
 
 
+def test_permissions_policy_omitted_when_settings_never_loaded(temp_root):
+    from app.app import create_app
+
+    (temp_root / "config" / "app_settings.json").write_text("{broken", encoding="utf-8")
+    client = create_app(temp_root).test_client()
+    healthz = client.get("/healthz")
+    assert healthz.status_code == 200
+    assert "Permissions-Policy" not in healthz.headers
+    ready = client.get("/ready")
+    assert ready.status_code == 503
+    assert "Permissions-Policy" not in ready.headers
+    api = client.get("/api/ui-config")
+    assert api.status_code == 503
+    assert api.get_json()["error"]["taxonomy"] == "CONFIG_MALFORMED"
+    assert "Permissions-Policy" not in api.headers
+
+
 def _short_sha_env_var():
     env_var = load_json("config/cicd.json")["provenance_env"]["short_sha"]
     assert env_var == "OSPREY_SHORT_SHA"
