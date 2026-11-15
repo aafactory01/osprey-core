@@ -25,13 +25,12 @@ CONTENT_SECURITY_POLICY = (
     "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; "
     "font-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
 )
-PERMISSIONS_POLICY = "camera=(), microphone=(), geolocation=()"
 NO_STORE_PREFIXES = ("/api/", "/health", "/ready")
 
 
-def _security_headers(response: Response) -> None:
+def _security_headers(response: Response, permissions_policy: str) -> None:
     response.headers.setdefault("Content-Security-Policy", CONTENT_SECURITY_POLICY)
-    response.headers.setdefault("Permissions-Policy", request.environ.get("console.permissions_policy", PERMISSIONS_POLICY))
+    response.headers.setdefault("Permissions-Policy", permissions_policy)
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
     response.headers.setdefault("Referrer-Policy", "no-referrer")
     response.headers.setdefault("X-Frame-Options", "DENY")
@@ -53,6 +52,11 @@ def create_app(root: Path | str | None = None) -> Flask:
     app = Flask(__name__)
     app.extensions["console.store"] = store
     app.extensions["console.backends"] = TaskBackendService(store)
+    try:
+        initial_policy = store.get("app_settings")["server"]["permissions_policy"]
+    except ConfigError:
+        initial_policy = ConfigStore(REPO_ROOT).get("app_settings")["server"]["permissions_policy"]
+    app.extensions["console.permissions_policy"] = initial_policy
 
     @app.before_request
     def _start_request() -> None:
@@ -67,13 +71,13 @@ def create_app(root: Path | str | None = None) -> Flask:
             return
         telemetry.RING.configure(settings["telemetry"]["ring_size"])
         request.max_content_length = settings["server"]["max_request_bytes"]
-        request.environ["console.permissions_policy"] = settings["server"]["permissions_policy"]
+        app.extensions["console.permissions_policy"] = settings["server"]["permissions_policy"]
 
     @app.after_request
     def _finish_request(response: Response) -> Response:
         trace_id = request.environ.get("console.trace_id") or telemetry.current_trace_id()
         response.headers["X-Trace-Id"] = trace_id
-        _security_headers(response)
+        _security_headers(response, app.extensions["console.permissions_policy"])
         if not request.path.startswith("/static/"):
             started = request.environ.get("console.started", time.perf_counter())
             failed = response.status_code >= HTTPStatus.BAD_REQUEST
