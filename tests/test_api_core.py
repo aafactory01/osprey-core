@@ -270,3 +270,36 @@ def test_telemetry_empty_ring_and_resize_keep_newest_events(temp_root, temp_clie
     finally:
         telemetry.RING.configure(load_json("config/app_settings.json")["telemetry"]["ring_size"])
 
+
+
+PERMISSIONS_POLICY = "camera=(), microphone=(), geolocation=()"
+
+
+def test_permissions_policy_header_is_set_from_config(temp_root, temp_client):
+    assert load_json("config/app_settings.json")["server"]["permissions_policy"] == PERMISSIONS_POLICY
+    assert temp_client.get("/").headers["Permissions-Policy"] == PERMISSIONS_POLICY
+    assert temp_client.get("/api/ui-config").headers["Permissions-Policy"] == PERMISSIONS_POLICY
+    narrowed = "camera=(), microphone=()"
+    edit_json(temp_root / "config" / "app_settings.json", lambda doc: doc["server"].update(permissions_policy=narrowed))
+    assert temp_client.get("/api/ui-config").headers["Permissions-Policy"] == narrowed
+
+
+def test_permissions_policy_header_present_on_404_and_503_errors(temp_root, temp_client):
+    missing = temp_client.get("/api/does-not-exist")
+    assert missing.status_code == 404
+    assert missing.headers["Permissions-Policy"] == PERMISSIONS_POLICY
+    (temp_root / "config" / "rollouts.json").write_text("{broken", encoding="utf-8")
+    broken = temp_client.get("/api/rollouts")
+    assert broken.status_code == 503
+    assert broken.headers["Permissions-Policy"] == PERMISSIONS_POLICY
+    (temp_root / "config" / "app_settings.json").unlink()
+    no_settings = temp_client.get("/api/ui-config")
+    assert no_settings.status_code == 503
+    assert no_settings.headers["Permissions-Policy"] == PERMISSIONS_POLICY
+
+
+def test_permissions_policy_invalid_config_fails_closed(temp_root, temp_client):
+    edit_json(temp_root / "config" / "app_settings.json", lambda doc: doc["server"].update(permissions_policy=""))
+    resp = temp_client.get("/api/ui-config")
+    assert resp.status_code == 503
+    assert resp.get_json()["error"]["taxonomy"] == "CONFIG_SCHEMA"
