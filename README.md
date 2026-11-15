@@ -100,3 +100,8 @@ carries `X-Trace-Id`, and each request logs one JSON line to stdout.
 - `templates/`: the 13 agent templates exported from the Hub.
 - `qa/`: HTTP smoke and Playwright browser sweep run against a live server.
 - `tests/`: happy-path, edge-case, chaos, honesty, AST zero-hardcoding, wiring, and hygiene tests.
+
+## Demo readiness check 2026-11-15
+
+Verified hybrid release workflow (`S1_SPEC` to `S6_DEPLOY_CLOSE`) with `task_backend=github` on `aafactory01/osprey-core` (no application behaviour change).
+
