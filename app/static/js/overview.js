@@ -81,8 +81,12 @@ function telemetryView(data) {
     { key: 'time', label: 'Time' }, { key: 'op', label: 'Operation' }, { key: 'status', label: 'Status' },
     { key: 'latency', label: 'Latency' }, { key: 'trace', label: 'Trace' },
   ];
+  const emptyNotice = data.events.length === 0
+    ? el('p', { class: 'small muted', text: 'No telemetry events buffered yet.' })
+    : null;
   return section('Recent telemetry', 'gauge', [
     el('p', { class: 'small muted', text: `Last ${data.count} of ${text(data.capacity)} buffered events (measured with perf_counter).` }),
+    emptyNotice,
     table(columns, rows),
   ]);
 }
