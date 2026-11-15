@@ -279,6 +279,15 @@ council) exported verbatim from the Hub. `templates/MANIFEST.json` records every
 - tests/test_templates_export.py::test_qa_council_harness_model_and_blob_source
 - tests/test_templates_export.py::test_no_secret_patterns_or_project_numbers
 
+### AC-22 Served commit short SHA in topbar
+GET /api/ui-config returns `short_sha` from the provenance environment variable `OSPREY_SHORT_SHA`
+(`config/cicd.json` `provenance_env.short_sha`), falling back to `runtime.unset_label` when absent
+or blank, and the console topbar `#service-meta` line displays `commit <short_sha>` next to the
+serving revision.
+- tests/test_api_core.py::test_ui_config_reports_short_sha_from_provenance_env
+- tests/test_api_core.py::test_ui_config_short_sha_falls_back_to_unset_label
+- tests/test_api_core.py::test_topbar_renders_short_sha_next_to_revision
+
 ## Out of scope
 
 - Live workflow tracking: stage progress and receipts are a labelled sample scenario.
