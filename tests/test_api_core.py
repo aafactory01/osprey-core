@@ -189,7 +189,7 @@ def test_telemetry_returns_measured_events_with_trace_ids(client):
     traced = client.get("/api/rollouts")
     body = client.get("/api/telemetry?limit=5").get_json()
     assert body["limit"] == 5 and body["count"] <= 5
-    assert body["capacity"] == load_json("config/app_settings.json")["telemetry"]["ring_size"]
+    assert body["capacity"] == load_json("config/app_settings.json")["telemetry"]["ring_size"] and body["ring_configured"] is True
     requests = [e for e in body["events"] if e["kind"] == "http_request"]
     assert requests and all(re.match(HEX32, e["trace_id"]) for e in requests)
     assert all(isinstance(e["latency_ms"], int) and e["latency_ms"] >= 0 for e in body["events"])
