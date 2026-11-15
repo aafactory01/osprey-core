@@ -5,7 +5,8 @@
     "default_port": 8080,
     "port_env_var": "PORT",
     "bind_host": "0.0.0.0",
-    "max_request_bytes": 65536
+    "max_request_bytes": 65536,
+    "permissions_policy": "camera=(), microphone=(), geolocation=()"
   },
   "runtime": {
     "service_env_var": "K_SERVICE",
