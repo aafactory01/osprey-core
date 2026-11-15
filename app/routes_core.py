@@ -118,4 +118,4 @@ def telemetry_events() -> Response:
     settings = store().get("app_settings")["telemetry"]
     limit = _limit(settings)
     events = telemetry.RING.recent(limit)
-    return jsonify({"count": len(events), "limit": limit, "capacity": telemetry.RING.capacity, "events": events})
+    return jsonify({"count": len(events), "limit": limit, "capacity": telemetry.RING.capacity, "ring_configured": telemetry.RING.configured, "events": events})
