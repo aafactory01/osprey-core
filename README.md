@@ -11,10 +11,10 @@ Acceptance criteria and the tests that prove them are in `SPEC.md`.
 ## Run locally
 
 ```bash
-python3 -m venv ../.venv && ../.venv/bin/pip install -r requirements-dev.txt
+python3 -m venv /tmp/.venv && /tmp/.venv/bin/pip install -r requirements-dev.txt
 export AUDIT_HMAC_KEY="$(openssl rand -hex 32)"
-PYTHONDONTWRITEBYTECODE=1 ../.venv/bin/python -m pytest -q -p no:cacheprovider
-PORT=8080 ../.venv/bin/gunicorn --bind 0.0.0.0:8080 --workers 1 --threads 8 app.app:app
+PYTHONDONTWRITEBYTECODE=1 /tmp/.venv/bin/python -m pytest -q -p no:cacheprovider
+PORT=8080 /tmp/.venv/bin/gunicorn --bind 0.0.0.0:8080 --workers 1 --threads 8 app.app:app
 ```
 
 Browser and HTTP sweeps against a running server (Playwright is a separate install):
