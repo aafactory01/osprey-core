@@ -177,3 +177,13 @@ def test_concurrent_requests_while_config_flaps_never_500(temp_root, temp_app):
     for thread in threads:
         thread.join(timeout=30)
     assert statuses and set(statuses) <= {200, 503} and problems == []
+
+
+def test_in_place_edit_updates_stat_signature_and_reloads(temp_root):
+    store = ConfigStore(temp_root)
+    assert store.get("health")["min_samples"] == 5
+    sig_before = store._cache["config/health.json"].signature
+    edit_json(temp_root / "config" / "health.json", lambda doc: doc.update(min_samples=12))
+    assert store.get("health")["min_samples"] == 12
+    assert store._cache["config/health.json"].signature != sig_before
+
