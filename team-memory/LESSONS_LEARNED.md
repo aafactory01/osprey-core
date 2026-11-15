@@ -29,3 +29,4 @@ incident; keep each lesson testable.
 - Deploy the immutable `@sha256` digest from the release packet, never a mutable tag, so the probe, the rollback, and the provenance all name the same image.
 - Mint S6 IAP exit-probe tokens with `--audiences` set to the IAP OAuth client ID and ensure the probe service account holds `roles/iap.httpsResourceAccessor` on the Cloud Run IAP web resource.
 
+- Keep the Flask application factory lazy and root-scoped: create_app(root) must tolerate a missing or malformed config at startup so liveness (/healthz, /health) still boots and API routes fail closed with 503, and must never fall back to REPO_ROOT when given an explicit root (PR #25 / Issue #22).
