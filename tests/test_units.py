@@ -150,3 +150,13 @@ def test_verify_chain_bad_shapes_fail(audit_cfg, items):
 def test_verify_receipt_odd_payloads_fail_cleanly(audit_cfg, receipt):
     result = verify_receipt(audit_cfg, TEST_HMAC_KEY.encode(), receipt, "0" * 64)
     assert result["verdict"] == "FAIL"
+
+
+def test_error_budget_remaining_boundary_targets():
+    from app.health import error_budget_remaining
+
+    assert error_budget_remaining(0.99, 0, 100) == pytest.approx(1.0)
+    assert error_budget_remaining(0.99, 1, 100) == pytest.approx(0.0)
+    assert error_budget_remaining(1.0, 0, 50) == 1
+    assert error_budget_remaining(1.0, 2, 50) == 0
+

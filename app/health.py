@@ -35,14 +35,19 @@ def _nearest_rank(values: list[int], percentile: float) -> int:
     return ordered[rank - 1]
 
 
+def error_budget_remaining(target: float, failures: int, total: int) -> float:
+    """Compute remaining error budget fraction for a success-ratio SLO target."""
+    allowed = 1 - target
+    observed = failures / total
+    return 1 - observed / allowed if allowed > 0 else (1 if failures == 0 else 0)
+
+
 def _success_ratio(slo: Mapping[str, Any], samples: list[Mapping[str, Any]]) -> dict[str, Any]:
     if "target" not in slo:
         raise ConfigError(CONFIG_SCHEMA, HEALTH_FILE, f"SLO {slo['id']} (success_ratio) needs a target")
     failures = sum(1 for event in samples if event["http_status"] >= HTTPStatus.INTERNAL_SERVER_ERROR)
     measured = (len(samples) - failures) / len(samples)
-    allowed = 1 - slo["target"]
-    observed = failures / len(samples)
-    remaining = 1 - observed / allowed if allowed > 0 else (1 if failures == 0 else 0)
+    remaining = error_budget_remaining(slo["target"], failures, len(samples))
     return {
         "target": slo["target"],
         "measured": measured,
