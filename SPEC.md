@@ -297,7 +297,9 @@ or reading another root); once `config/app_settings.json` has loaded, its
 GET /api/ui-config returns `short_sha` from the provenance environment variable `OSPREY_SHORT_SHA`
 (`config/cicd.json` `provenance_env.short_sha`), falling back to `runtime.unset_label` when absent
 or blank, and the console topbar `#service-meta` line displays `commit <short_sha>` next to the
-serving revision.
+serving revision. A missing, unreadable, malformed, or schema-invalid `config/app_settings.json`
+or `config/cicd.json` causes GET `/api/ui-config` to fail closed with HTTP 503 and a structured
+error taxonomy.
 - tests/test_api_core.py::test_ui_config_reports_short_sha_from_provenance_env
 - tests/test_api_core.py::test_ui_config_short_sha_falls_back_to_unset_label
 - tests/test_api_core.py::test_topbar_renders_short_sha_next_to_revision
