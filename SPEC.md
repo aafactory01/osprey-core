@@ -279,6 +279,14 @@ council) exported verbatim from the Hub. `templates/MANIFEST.json` records every
 - tests/test_templates_export.py::test_qa_council_harness_model_and_blob_source
 - tests/test_templates_export.py::test_no_secret_patterns_or_project_numbers
 
+### AC-21 Permissions-Policy response header
+Every console HTTP response (including 200 HTML/API responses, 404 unknown routes, and 503 error
+responses) carries `Permissions-Policy: camera=(), microphone=(), geolocation=()` read from
+`config/app_settings.json` (`server.permissions_policy`, validated by `config/config_schema.json`).
+- tests/test_api_core.py::test_permissions_policy_header_is_set_from_config
+- tests/test_api_core.py::test_permissions_policy_header_present_on_404_and_503_errors
+- tests/test_api_core.py::test_permissions_policy_invalid_config_fails_closed
+
 ### AC-22 Served commit short SHA in topbar
 GET /api/ui-config returns `short_sha` from the provenance environment variable `OSPREY_SHORT_SHA`
 (`config/cicd.json` `provenance_env.short_sha`), falling back to `runtime.unset_label` when absent

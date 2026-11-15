@@ -28,8 +28,10 @@ CONTENT_SECURITY_POLICY = (
 NO_STORE_PREFIXES = ("/api/", "/health", "/ready")
 
 
-def _security_headers(response: Response) -> None:
+def _security_headers(response: Response, permissions_policy: str | None) -> None:
     response.headers.setdefault("Content-Security-Policy", CONTENT_SECURITY_POLICY)
+    if permissions_policy:
+        response.headers.setdefault("Permissions-Policy", permissions_policy)
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
     response.headers.setdefault("Referrer-Policy", "no-referrer")
     response.headers.setdefault("X-Frame-Options", "DENY")
@@ -51,6 +53,10 @@ def create_app(root: Path | str | None = None) -> Flask:
     app = Flask(__name__)
     app.extensions["console.store"] = store
     app.extensions["console.backends"] = TaskBackendService(store)
+    try:
+        app.extensions["console.permissions_policy"] = store.get("app_settings")["server"]["permissions_policy"]
+    except ConfigError:
+        app.extensions["console.permissions_policy"] = None
 
     @app.before_request
     def _start_request() -> None:
@@ -65,12 +71,13 @@ def create_app(root: Path | str | None = None) -> Flask:
             return
         telemetry.RING.configure(settings["telemetry"]["ring_size"])
         request.max_content_length = settings["server"]["max_request_bytes"]
+        app.extensions["console.permissions_policy"] = settings["server"]["permissions_policy"]
 
     @app.after_request
     def _finish_request(response: Response) -> Response:
         trace_id = request.environ.get("console.trace_id") or telemetry.current_trace_id()
         response.headers["X-Trace-Id"] = trace_id
-        _security_headers(response)
+        _security_headers(response, app.extensions.get("console.permissions_policy"))
         if not request.path.startswith("/static/"):
             started = request.environ.get("console.started", time.perf_counter())
             failed = response.status_code >= HTTPStatus.BAD_REQUEST
