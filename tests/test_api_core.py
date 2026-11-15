@@ -251,3 +251,22 @@ def test_http_error_codes_fall_back_without_config(temp_root, audit_key):
 
 def test_api_responses_are_not_cached(client):
     assert client.get("/api/workflow").headers["Cache-Control"] == "no-store"
+
+
+def test_telemetry_empty_ring_and_resize_keep_newest_events(temp_root, temp_client):
+    from app import telemetry
+
+    assert temp_client.get("/health").status_code == 200
+    telemetry.RING.clear()
+    empty = temp_client.get("/api/telemetry?limit=5").get_json()
+    assert empty["count"] == 0 and empty["events"] == []
+    edit_json(temp_root / "config" / "app_settings.json", lambda doc: doc["telemetry"].update(ring_size=5))
+    try:
+        for _ in range(6):
+            assert temp_client.get("/health").status_code == 200
+        resized = temp_client.get("/api/telemetry?limit=5").get_json()
+        assert resized["capacity"] == 5 and resized["count"] == 5 and len(resized["events"]) == 5
+        assert all(event["path"] == "/health" for event in resized["events"])
+    finally:
+        telemetry.RING.configure(load_json("config/app_settings.json")["telemetry"]["ring_size"])
+
