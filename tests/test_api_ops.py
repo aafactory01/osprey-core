@@ -271,3 +271,11 @@ def test_signatures_depend_on_the_key(client, monkeypatch):
     body = client.post("/api/receipts/verify", json={"receipt": stale["receipt"], "signature": stale["signature"]}).get_json()
     assert body["verdict"] == "FAIL"
     assert json.dumps(second).count("another-test-key") == 0
+
+
+def test_reordered_and_gapped_chain_reports_broken_index(client):
+    chain = [{"receipt": i["receipt"], "signature": i["signature"]} for i in _items(client)]
+    reordered = [chain[0], chain[1], chain[3], chain[2], *chain[4:]]
+    body = client.post("/api/receipts/verify", json={"chain": reordered}).get_json()
+    assert body["verdict"] == "FAIL" and body["valid"] is False and body["broken_at"] == 2
+
