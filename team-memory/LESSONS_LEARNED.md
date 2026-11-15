@@ -27,3 +27,5 @@ incident; keep each lesson testable.
 - Gate CI/CD on the workflow stage like any release command: Cloud Build only from S5, Cloud Deploy only at S6, and a wrapper script is gated by the action flag that makes it act (`--commit`, `--packet`, `--execute`).
 - Bounce a failed deterministic check to the stage that owns the fix (a failed unit-tests step goes back to S3_BUILD, a failed smoke check to S4_VERIFY_QA); never let the deterministic stage patch code itself.
 - Deploy the immutable `@sha256` digest from the release packet, never a mutable tag, so the probe, the rollback, and the provenance all name the same image.
+- Mint S6 IAP exit-probe tokens with `--audiences` set to the IAP OAuth client ID and ensure the probe service account holds `roles/iap.httpsResourceAccessor` on the Cloud Run IAP web resource.
+
