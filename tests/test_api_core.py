@@ -270,3 +270,36 @@ def test_telemetry_empty_ring_and_resize_keep_newest_events(temp_root, temp_clie
     finally:
         telemetry.RING.configure(load_json("config/app_settings.json")["telemetry"]["ring_size"])
 
+
+
+def _short_sha_env_var():
+    env_var = load_json("config/cicd.json")["provenance_env"]["short_sha"]
+    assert env_var == "OSPREY_SHORT_SHA"
+    return env_var
+
+
+def test_ui_config_reports_short_sha_from_provenance_env(client, monkeypatch):
+    monkeypatch.setenv(_short_sha_env_var(), "c29630d")
+    body = client.get("/api/ui-config").get_json()
+    assert body["short_sha"] == "c29630d"
+
+
+def test_ui_config_short_sha_falls_back_to_unset_label(client, monkeypatch):
+    env_var = _short_sha_env_var()
+    unset_label = load_json("config/app_settings.json")["runtime"]["unset_label"]
+    monkeypatch.delenv(env_var, raising=False)
+    assert client.get("/api/ui-config").get_json()["short_sha"] == unset_label
+    monkeypatch.setenv(env_var, "")
+    assert client.get("/api/ui-config").get_json()["short_sha"] == unset_label
+
+
+def test_topbar_renders_short_sha_next_to_revision(temp_root, temp_client):
+    from app.config_store import REPO_ROOT
+
+    main_js = (REPO_ROOT / "app" / "static" / "js" / "main.js").read_text(encoding="utf-8")
+    assert "commit ${config.short_sha}" in main_js
+    assert "revision ${config.revision}" in main_js
+    (temp_root / "config" / "cicd.json").write_text("{broken", encoding="utf-8")
+    resp = temp_client.get("/api/ui-config")
+    assert resp.status_code == 503
+    assert resp.get_json()["error"]["taxonomy"] == "CONFIG_MALFORMED"
