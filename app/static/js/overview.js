@@ -47,7 +47,7 @@ function rolloutsView(data) {
       revision: el('code', { text: item.revision }),
       status: stateBadge(item.status),
       traffic: el('div', { class: 'score' }, [
-        el('progress', { class: 'meter is-good', max: data.traffic_total_percent, value: item.traffic_percent }),
+        el('progress', { class: 'meter is-good', max: data.traffic_total_percent, value: item.traffic_percent, 'aria-label': `${item.id} traffic share` }),
         el('b', { text: `${item.traffic_percent}%` }),
       ]),
       owner: text(item.owner),

@@ -173,3 +173,9 @@ def test_guard_is_real_and_exports_evaluate():
 
     assert callable(guard.evaluate) and callable(guard.main)
     assert "def guard():" not in (REPO_ROOT / "dreamstore" / "hooks" / "dp001_pre_tool_guard.py").read_text()
+
+
+def test_overview_rollout_progress_has_aria_label():
+    overview = (REPO_ROOT / "app" / "static" / "js" / "overview.js").read_text(encoding="utf-8")
+    assert "'aria-label': `${item.id} traffic share`" in overview
+
