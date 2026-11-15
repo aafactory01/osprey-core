@@ -52,7 +52,7 @@ async function boot() {
   setSettings(config.ui);
   setTimeoutMs(config.ui.fetch_timeout_ms);
   byId('console-title').textContent = config.console_title;
-  byId('service-meta').textContent = `Service ${config.service_name}, Cloud Run service ${config.cloud_run_service}, revision ${config.revision}`;
+  byId('service-meta').textContent = `Service ${config.service_name}, Cloud Run service ${config.cloud_run_service}, revision ${config.revision}, commit ${config.short_sha}`;
   initDreamDrawer({
     dialog: byId('dream-drawer'), openButton: byId('dream-open'), runButton: byId('replay-run'),
     meta: byId('replay-meta'), summary: byId('dreams-body'),

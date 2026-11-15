@@ -59,12 +59,15 @@ def readyz() -> tuple[Response, int]:
 @core_bp.get("/api/ui-config")
 def ui_config() -> Response:
     settings = store().get("app_settings")
+    cicd = store().get("cicd")
     runtime = settings["runtime"]
+    short_sha_env = cicd["provenance_env"]["short_sha"]
     return jsonify({
         "service_name": settings["service_name"],
         "console_title": settings["console_title"],
         "cloud_run_service": os.environ.get(runtime["service_env_var"]) or runtime["unset_label"],
         "revision": os.environ.get(runtime["revision_env_var"]) or runtime["unset_label"],
+        "short_sha": os.environ.get(short_sha_env) or runtime["unset_label"],
         "ui": settings["ui"],
     })
 

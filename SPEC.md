@@ -293,6 +293,17 @@ or reading another root); once `config/app_settings.json` has loaded, its
 - tests/test_api_core.py::test_permissions_policy_invalid_config_fails_closed
 - tests/test_api_core.py::test_permissions_policy_omitted_when_settings_never_loaded
 
+### AC-22 Served commit short SHA in topbar
+GET /api/ui-config returns `short_sha` from the provenance environment variable `OSPREY_SHORT_SHA`
+(`config/cicd.json` `provenance_env.short_sha`), falling back to `runtime.unset_label` when absent
+or blank, and the console topbar `#service-meta` line displays `commit <short_sha>` next to the
+serving revision. A missing, unreadable, malformed, or schema-invalid `config/app_settings.json`
+or `config/cicd.json` causes GET `/api/ui-config` to fail closed with HTTP 503 and a structured
+error taxonomy.
+- tests/test_api_core.py::test_ui_config_reports_short_sha_from_provenance_env
+- tests/test_api_core.py::test_ui_config_short_sha_falls_back_to_unset_label
+- tests/test_api_core.py::test_topbar_renders_short_sha_next_to_revision
+
 ## Out of scope
 
 - Live workflow tracking: stage progress and receipts are a labelled sample scenario.
