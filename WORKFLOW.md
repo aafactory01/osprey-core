@@ -79,6 +79,7 @@ sync with `config/cicd.json`, the DP-001 `stage_order`, and the roster in `confi
   - GET `/api/pipeline` provenance matches the packet and the deploy report.
   - IAP, ingress all, min and max 1 instance, and the runtime service account are unchanged.
   - The osprey-onboard-sa run.invoker and IAP accessor bindings are unchanged.
+  - For `IAP_TOKEN_COMMAND`, mint an OIDC ID token with `--audiences` set to the IAP OAuth client ID and verify the caller holds `roles/iap.httpsResourceAccessor` on the Cloud Run IAP web resource.
 - Rollback: `python3 scripts/s6_rollback.py --execute`
 
 ## Control loops
