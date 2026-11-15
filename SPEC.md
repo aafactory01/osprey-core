@@ -283,9 +283,15 @@ council) exported verbatim from the Hub. `templates/MANIFEST.json` records every
 Every console HTTP response (including 200 HTML/API responses, 404 unknown routes, and 503 error
 responses) carries `Permissions-Policy: camera=(), microphone=(), geolocation=()` read from
 `config/app_settings.json` (`server.permissions_policy`, validated by `config/config_schema.json`).
+`Permissions-Policy` is omitted only while `config/app_settings.json` has never loaded since
+application startup (in which case `/healthz` and `/health` still return `200`, `/ready` and
+`/readyz` report `503`, and API routes fail closed with `503` without inventing an inline default
+or reading another root); once `config/app_settings.json` has loaded, its
+`server.permissions_policy` is retained for subsequent `404` and `503` responses.
 - tests/test_api_core.py::test_permissions_policy_header_is_set_from_config
 - tests/test_api_core.py::test_permissions_policy_header_present_on_404_and_503_errors
 - tests/test_api_core.py::test_permissions_policy_invalid_config_fails_closed
+- tests/test_api_core.py::test_permissions_policy_omitted_when_settings_never_loaded
 
 ## Out of scope
 
