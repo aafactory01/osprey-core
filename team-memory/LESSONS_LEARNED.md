@@ -29,3 +29,4 @@ incident; keep each lesson testable.
 - Deploy the immutable `@sha256` digest from the release packet, never a mutable tag, so the probe, the rollback, and the provenance all name the same image.
 - Mint S6 IAP exit-probe tokens with `--audiences` set to the IAP OAuth client ID and ensure the probe service account holds `roles/iap.httpsResourceAccessor` on the Cloud Run IAP web resource.
 
+- When parallel task branches each add a numbered acceptance criterion to `SPEC.md`, `test_spec_acceptance_criteria_are_numbered` fails on the higher-numbered branch until the lower-numbered branch merges into `main` and is merged in; mark any pre-merge S2 receipt conditional and append unconditional S2/S3 receipts after merging `origin/main` (PR #24 / Issue #23).
